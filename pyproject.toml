@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scitex-decorators"
+version = "0.1.0"
+description = "Decorator library: numpy_fn/torch_fn/pandas_fn/xarray_fn/signal_fn type converters, caching, batching, deprecation — standalone module from the SciTeX ecosystem"
+readme = "README.md"
+license = "AGPL-3.0-only"
+requires-python = ">=3.9"
+authors = [{name = "Yusuke Watanabe", email = "ywatanabe@scitex.ai"}]
+keywords = ["scitex", "decorators", "caching", "joblib", "numpy", "torch"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "numpy",
+]
+
+[project.optional-dependencies]
+caching = ["joblib"]
+torch = ["torch"]
+pandas = ["pandas"]
+xarray = ["xarray"]
+all = ["scitex-decorators[caching,torch,pandas,xarray]"]
+dev = ["pytest", "pytest-cov", "ruff", "joblib", "pandas"]
+docs = [
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+    "myst-parser>=2.0",
+    "sphinx-copybutton>=0.5",
+    "sphinx-autodoc-typehints>=1.25",
+]
+
+[project.urls]
+Homepage = "https://github.com/ywatanabe1989/scitex-decorators"
+Repository = "https://github.com/ywatanabe1989/scitex-decorators"
+Documentation = "https://scitex-decorators.readthedocs.io"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--disable-warnings"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I"]
+ignore = ["E501"]
