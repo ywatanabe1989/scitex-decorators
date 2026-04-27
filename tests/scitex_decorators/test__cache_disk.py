@@ -321,7 +321,7 @@ class TestCacheDisk:
         assert result2 == 10
         assert call_count == 2
 
-    @patch("scitex_decorators._cache_disk._Memory")
+    @patch("joblib.Memory")
     def test_cache_disk_joblib_memory_integration(self, mock_memory_class):
         """Test integration with joblib.Memory."""
         mock_memory = MagicMock()
@@ -409,7 +409,7 @@ class TestCacheDisk:
 
     def test_cache_disk_memory_verbose_setting(self):
         """Test that joblib Memory is created with verbose=0."""
-        with patch("scitex_decorators._cache_disk._Memory") as mock_memory:
+        with patch("joblib.Memory") as mock_memory:
             from scitex_decorators import cache_disk
 
             @cache_disk
