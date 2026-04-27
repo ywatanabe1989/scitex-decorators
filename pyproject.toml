@@ -23,18 +23,37 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-caching = ["joblib"]
-torch = ["torch"]
-pandas = ["pandas"]
-xarray = ["xarray"]
-all = ["scitex-decorators[caching,torch,pandas,xarray]"]
-dev = ["pytest", "pytest-cov", "ruff", "joblib", "pandas"]
+caching = [
+    "joblib",
+]
+pandas = [
+    "pandas",
+]
+torch = [
+    "torch",
+]
+xarray = [
+    "xarray",
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "joblib",
+    "pandas",
+]
 docs = [
     "sphinx>=7.0",
     "sphinx-rtd-theme>=2.0",
     "myst-parser>=2.0",
     "sphinx-copybutton>=0.5",
     "sphinx-autodoc-typehints>=1.25",
+]
+all = [
+    "scitex-decorators[caching]",
+    "scitex-decorators[pandas]",
+    "scitex-decorators[torch]",
+    "scitex-decorators[xarray]",
 ]
 
 [project.urls]
