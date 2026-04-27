@@ -1,5 +1,16 @@
 # scitex-decorators
 
+<!-- scitex-badges:start -->
+[![PyPI](https://img.shields.io/pypi/v/scitex-decorators.svg)](https://pypi.org/project/scitex-decorators/)
+[![Python](https://img.shields.io/pypi/pyversions/scitex-decorators.svg)](https://pypi.org/project/scitex-decorators/)
+[![Tests](https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/test.yml)
+[![Install Test](https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/install-test.yml/badge.svg)](https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/install-test.yml)
+[![Coverage](https://codecov.io/gh/ywatanabe1989/scitex-decorators/graph/badge.svg)](https://codecov.io/gh/ywatanabe1989/scitex-decorators)
+[![Docs](https://readthedocs.org/projects/scitex-decorators/badge/?version=latest)](https://scitex-decorators.readthedocs.io/en/latest/)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+<!-- scitex-badges:end -->
+
+
 Decorator library extracted from the [SciTeX](https://github.com/ywatanabe1989/scitex-python) ecosystem as a standalone package.
 
 ## Install
