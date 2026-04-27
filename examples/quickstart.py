@@ -34,9 +34,16 @@ def main() -> int:
     b = slow_square_sum(10000)
     print(f"slow_square_sum(10000) = {a} (cached: {a == b})")
 
-    # numpy_fn accepts torch tensors transparently if torch is available
+    # numpy_fn accepts torch tensors transparently if torch is available.
+    # The decorator lazily imports torch during arg-conversion; without the
+    # [torch] extra (CI's default install) that import raises
+    # ModuleNotFoundError. Skip the standardize block in that case.
     arr = np.arange(12, dtype=np.float64).reshape(3, 4)
-    out = standardize(arr)
+    try:
+        out = standardize(arr)
+    except ModuleNotFoundError as e:
+        print(f"standardize unavailable ({e}); skipping torch-decorated path.")
+        return 0
     print(f"standardize numpy in -> shape={out.shape}, mean≈{out.mean():.2e}")
 
     try:
