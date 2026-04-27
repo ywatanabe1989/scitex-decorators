@@ -2,7 +2,7 @@
 # Timestamp: "2025-06-03 07:47:00 (ywatanabe)"
 # File: ./tests/scitex/decorators/test__signal_fn.py
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -271,6 +271,81 @@ def test_signal_fn_conversion_mocking(mock_to_torch):
 
     # Result should be converted back to numpy
     assert isinstance(result, np.ndarray)
+
+
+def test_signal_fn_preserves_float64_dtype():
+    """Regression: float64 numpy input must round-trip as float64."""
+    from scitex_decorators import signal_fn
+
+    @signal_fn
+    def passthrough(signal):
+        return signal  # already torch.Tensor inside the wrapper
+
+    arr_in = np.random.randn(64).astype(np.float64)
+    arr_out = passthrough(arr_in)
+
+    assert isinstance(arr_out, np.ndarray)
+    assert arr_out.dtype == np.float64, (
+        f"Expected float64, got {arr_out.dtype} (silent downcast bug)"
+    )
+
+
+def test_signal_fn_preserves_float32_dtype():
+    """Regression: float32 numpy input stays float32."""
+    from scitex_decorators import signal_fn
+
+    @signal_fn
+    def passthrough(signal):
+        return signal
+
+    arr_in = np.random.randn(64).astype(np.float32)
+    arr_out = passthrough(arr_in)
+
+    assert isinstance(arr_out, np.ndarray)
+    assert arr_out.dtype == np.float32
+
+
+def test_signal_fn_preserves_dtype_through_torch_op():
+    """Regression: dtype is preserved even when the inner function performs
+    a torch op that would normally promote precision."""
+    from scitex_decorators import signal_fn
+
+    @signal_fn
+    def scale(signal):
+        return signal * 2.0  # torch op that may promote dtype
+
+    for np_dtype in (np.float32, np.float64):
+        arr_in = np.random.randn(32).astype(np_dtype)
+        arr_out = scale(arr_in)
+        assert arr_out.dtype == np_dtype, f"Input {np_dtype} produced {arr_out.dtype}"
+
+
+def test_signal_fn_preserves_dtype_for_2d_batch():
+    """Regression: shape and dtype preserved for 2-D batched signals."""
+    from scitex_decorators import signal_fn
+
+    @signal_fn
+    def passthrough(signal):
+        return signal
+
+    arr_in = np.random.randn(8, 128).astype(np.float64)
+    arr_out = passthrough(arr_in)
+
+    assert arr_out.shape == arr_in.shape
+    assert arr_out.dtype == np.float64
+
+
+def test_to_torch_preserves_float64_dtype():
+    """Direct converter regression: to_torch must preserve float64."""
+    from scitex_decorators._converters import _return_always, to_torch
+
+    arr_in = np.random.randn(16).astype(np.float64)
+    converted = to_torch(arr_in, return_fn=_return_always)[0][0]
+    assert converted.dtype == torch.float64
+
+    arr_in32 = np.random.randn(16).astype(np.float32)
+    converted32 = to_torch(arr_in32, return_fn=_return_always)[0][0]
+    assert converted32.dtype == torch.float32
 
 
 if __name__ == "__main__":
