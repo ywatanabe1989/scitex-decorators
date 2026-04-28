@@ -16,9 +16,14 @@ from pathlib import Path
 
 
 def _resolve_cache_dir() -> str:
-    """Return cache directory: scitex.config.get_paths().function_cache if available,
-    else ${SCITEX_CACHE_DIR} or ${XDG_CACHE_HOME}/scitex-decorators/function_cache,
-    else ~/.cache/scitex-decorators/function_cache."""
+    """Return cache directory.
+
+    Resolution order:
+      1. ``scitex.config.get_paths().function_cache`` if available.
+      2. ``$SCITEX_CACHE_DIR/function_cache`` if set.
+      3. ``$SCITEX_DIR/decorators/runtime/cache`` (defaults to
+         ``~/.scitex/decorators/runtime/cache``).
+    """
     try:
         from scitex.config import get_paths
 
@@ -27,9 +32,8 @@ def _resolve_cache_dir() -> str:
         env = os.environ.get("SCITEX_CACHE_DIR")
         if env:
             return str(Path(env) / "function_cache")
-        xdg = os.environ.get("XDG_CACHE_HOME")
-        base = Path(xdg) if xdg else Path.home() / ".cache"
-        return str(base / "scitex-decorators" / "function_cache")
+        base = Path(os.environ.get("SCITEX_DIR", Path.home() / ".scitex"))
+        return str(base / "decorators" / "runtime" / "cache")
 
 
 def cache_disk(func):
