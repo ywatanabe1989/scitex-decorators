@@ -13,6 +13,7 @@ __DIR__ = os.path.dirname(__FILE__)
 
 import functools
 from pathlib import Path
+from scitex_config._ecosystem import local_state
 
 
 def _resolve_cache_dir() -> str:
