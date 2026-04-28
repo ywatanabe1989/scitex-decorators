@@ -6,8 +6,15 @@ caching (cache_disk, cache_disk_async, cache_mem), batching, deprecation,
 timeout, and ordering helpers.
 """
 
-__version__ = "0.1.0"
-
+try:
+    from importlib.metadata import version as _v, PackageNotFoundError
+    try:
+        __version__ = _v("scitex-decorators")
+    except PackageNotFoundError:
+        __version__ = "0.0.0+local"
+    del _v, PackageNotFoundError
+except ImportError:  # pragma: no cover — only on ancient Pythons
+    __version__ = "0.0.0+local"
 from ._auto_order import (
     AutoOrderDecorator,
     batch_fn,
