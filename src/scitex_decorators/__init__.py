@@ -6,6 +6,8 @@ caching (cache_disk, cache_disk_async, cache_mem), batching, deprecation,
 timeout, and ordering helpers.
 """
 
+from __future__ import annotations
+
 try:
     from importlib.metadata import version as _v, PackageNotFoundError
     try:
@@ -57,6 +59,7 @@ from ._xarray_fn import xarray_fn
 
 
 __all__ = [
+    "__version__",
     "AutoOrderDecorator",
     "ConversionWarning",
     "batch_fn",
