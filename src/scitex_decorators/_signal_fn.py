@@ -66,30 +66,12 @@ def signal_fn(func: Callable) -> Callable:
         # Convert results back to original input types
         import torch
 
-        # Capture original ndim so we can squeeze any leading/internal padding
-        # (filters typically pad to 4D internally) back down to match the
-        # caller's input shape.
-        original_ndim = getattr(original_object, "ndim", None)
-
         def _to_np(t):
             arr = t.detach().cpu().numpy()
             # Restore original numpy dtype when caller used a real ndarray /
             # pandas / xarray with a known floating dtype.
             if original_dtype is not None and arr.dtype != original_dtype:
                 arr = arr.astype(original_dtype, copy=False)
-            # Squeeze leading/internal size-1 dims down to match original ndim.
-            if original_ndim is not None and arr.ndim > original_ndim:
-                while (
-                    arr.ndim > original_ndim
-                    and 1 in arr.shape[: arr.ndim - original_ndim + 1]
-                ):
-                    # Find first leading axis of size 1 and remove it
-                    for ax in range(arr.ndim - original_ndim):
-                        if arr.shape[ax] == 1:
-                            arr = np.squeeze(arr, axis=ax)
-                            break
-                    else:
-                        break
             return arr
 
         if isinstance(results, torch.Tensor):
