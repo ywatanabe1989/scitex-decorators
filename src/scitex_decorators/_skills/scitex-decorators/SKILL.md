@@ -129,5 +129,3 @@ order back.
   directory comes from
 - General skill `01_arch_06_local-state-directories.md` — cache
   layout policy
-
-<!-- EOF -->
