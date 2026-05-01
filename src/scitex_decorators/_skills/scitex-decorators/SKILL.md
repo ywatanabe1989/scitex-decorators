@@ -71,14 +71,8 @@ memorize it. `enable_auto_order()` / `disable_auto_order()`.
 
 ## Pitfalls
 
-- **`@cache_disk` above `@numpy_fn` manually**: cache key includes input
-  type — same input as numpy then torch caches twice. Use
-  `@AutoOrderDecorator` or `@numpy_fn` outermost.
-- **`@signal_fn` vs `@numpy_fn` for time-series**: `signal_fn` handles
-  axis-aware conversion (channel-first vs sample-first).
-- **`@cache_disk` on non-picklable returns**: swap to `@cache_mem`.
+- `@cache_disk` above `@numpy_fn` manually: cache key includes input type — same input as numpy then torch caches twice. Use `@AutoOrderDecorator` or `@numpy_fn` outermost.
+- `@signal_fn` vs `@numpy_fn` for time-series: `signal_fn` handles axis-aware conversion.
+- `@cache_disk` on non-picklable returns: swap to `@cache_mem`.
 
-## See also
-
-- `scitex-config` — `local_state.runtime_path` source
-- General `01_arch_06_local-state-directories.md` — cache layout policy
+See `scitex-config` for `local_state.runtime_path`; general `01_arch_06_local-state-directories.md` for cache layout policy.
