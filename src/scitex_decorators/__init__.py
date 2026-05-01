@@ -9,7 +9,9 @@ timeout, and ordering helpers.
 from __future__ import annotations
 
 try:
-    from importlib.metadata import version as _v, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _v
+
     try:
         __version__ = _v("scitex-decorators")
     except PackageNotFoundError:
@@ -27,9 +29,9 @@ from ._auto_order import (
     torch_fn,
 )
 from ._batch_fn import batch_fn
-from ._cache_disk import cache_disk
-from ._cache_disk_async import cache_disk_async
-from ._cache_mem import cache_mem
+from ._cache._cache_disk import cache_disk
+from ._cache._cache_disk_async import cache_disk_async
+from ._cache._cache_mem import cache_mem
 from ._combined import (
     batch_numpy_fn,
     batch_pandas_fn,
@@ -56,7 +58,6 @@ from ._timeout import timeout
 from ._torch_fn import torch_fn
 from ._wrap import wrap
 from ._xarray_fn import xarray_fn
-
 
 __all__ = [
     "__version__",

@@ -9,51 +9,40 @@ interfaces:
   skills: 2
   hook: 0
   http: 0
-canonical-location: scitex-decorators/src/scitex_decorators/_skills/scitex-decorators/SKILL.md
 tags: [scitex-decorators, scitex-package, decorators, numpy, torch, pandas, caching]
 ---
 
-> **Interfaces:** Python ⭐⭐⭐ (primary) · CLI — · MCP — · Skills ⭐⭐ · Hook — · HTTP —
+> **Interfaces:** Python ⭐⭐⭐ (primary) · Skills ⭐⭐
 
 # scitex-decorators
 
-Decorator library covering the four common scientific-Python pain
-points: array-type conversion, caching, batching, and lifecycle.
+Four families: type-conversion, caching, batching, lifecycle.
 
-## Type-conversion family
+## Type-conversion
 
-Declare what your function expects natively; accept anything.
+Declare the native type; accept anything. Round-trip preserves caller's
+type and (for torch) device.
 
 ```python
 from scitex_decorators import numpy_fn, torch_fn, pandas_fn, xarray_fn, signal_fn
 
 @numpy_fn
-def my_kernel(x):           # x is guaranteed numpy.ndarray inside
-    return x ** 2           # whatever you return is converted back
-                            # to the caller's type
-
-@torch_fn
-def gpu_kernel(x):          # x is on caller's device + dtype; nested
-    return x.relu()         # torch_fn calls don't double-convert
+def kernel(x): return x ** 2     # x is numpy inside; return matches caller
 ```
 
-Round-trip rules: caller passes torch → numpy_fn → numpy in, **torch
-out** (matches caller). cuda preserved.
-
-## Caching family
+## Caching
 
 ```python
-from scitex_decorators import cache_disk, cache_mem, cache_disk_async
+from scitex_decorators import cache_disk, cache_mem
 
-@cache_disk          # joblib-backed; survives process restart
+@cache_disk         # joblib-backed; survives process restart
 def expensive(x): ...
 
-@cache_mem           # in-process LRU with explicit invalidation
+@cache_mem          # in-process LRU
 def hot_path(x): ...
 ```
 
-Cache lives under `local_state.runtime_path("decorators", "cache")`
-(`$SCITEX_DIR/decorators/runtime/cache/`).
+Cache lives at `local_state.runtime_path("decorators", "cache")`.
 
 ## Batching
 
@@ -61,71 +50,35 @@ Cache lives under `local_state.runtime_path("decorators", "cache")`
 from scitex_decorators import batch_fn, batch_torch_fn
 
 @batch_fn(batch_size=256)
-def per_item(x): ...        # called with the *batched* input; you
-                            # write the inner loop / matmul
+def per_item(x): ...
 
 @batch_torch_fn(batch_size=64)
-def per_item_gpu(x): ...    # batch + numpy↔torch conversion composed
+def gpu_item(x): ...   # batch + numpy↔torch conversion composed
 ```
 
-Combinator family (`batch_numpy_fn`, `batch_pandas_fn`,
-`numpy_batch_fn`, …) lets you express both orderings depending on
-which decorator's frame you want as outermost.
+Combinators: `batch_numpy_fn`, `batch_pandas_fn`, `numpy_batch_fn`, …
+(both orderings, depending on which decorator should be outermost).
 
 ## Lifecycle
 
-- `@deprecated(reason="...", since="0.5.0")` — emits warning on call
-- `@not_implemented` — raises `NotImplementedError` with a clean
-  signature
-- `@timeout(seconds=30)` — kills slow calls
-- `@preserve_doc` — copies wrapped function's docstring/signature onto
-  a wrapper
-- `@wrap` — minimal wrapper utility for ad-hoc decoration
+`@deprecated`, `@not_implemented`, `@timeout(seconds=N)`,
+`@preserve_doc`, `@wrap`.
 
 ## AutoOrderDecorator
 
-Stacking type-conversion + batching + caching by hand is error-prone
-(does cache see numpy or torch?). `@AutoOrderDecorator` resolves the
-canonical order so you don't memorise it:
+`@AutoOrderDecorator` resolves canonical stacking order so you don't
+memorize it. `enable_auto_order()` / `disable_auto_order()`.
 
-```python
-from scitex_decorators import AutoOrderDecorator, enable_auto_order
+## Pitfalls
 
-enable_auto_order()
-# Now writing @numpy_fn @batch_fn @cache_disk works regardless of
-# the order you wrote them in source.
-```
-
-Disable per-call with `disable_auto_order()` if you need the manual
-order back.
-
-## When to use
-
-- ✅ A pure numerical function that should accept numpy or torch
-  inputs
-- ✅ Expensive function calls that should survive process restart
-  (`@cache_disk`)
-- ✅ Per-item logic that needs GPU-batch wrapping
-- ❌ I/O functions — cache_disk uses pickle; pickle the result, not
-  the file handle
-- ❌ Functions with random state — cache the seed too, or use
-  `@cache_mem` with explicit invalidation
-
-## Common mistakes
-
-- **Stacking @cache_disk above @numpy_fn manually**: cache key
-  includes the input array's *type* — pass numpy on call N, torch on
-  call N+1, and you cache twice. Use `@AutoOrderDecorator` or stack
-  `@numpy_fn` outermost.
-- **Forgetting `signal_fn` for time-series**: `@signal_fn` handles
-  axis-aware conversion (channel-first vs sample-first) that
-  `@numpy_fn` doesn't.
-- **`@cache_disk` on functions that return non-picklable objects**:
-  swap to `@cache_mem` or restructure to return raw arrays.
+- **`@cache_disk` above `@numpy_fn` manually**: cache key includes input
+  type — same input as numpy then torch caches twice. Use
+  `@AutoOrderDecorator` or `@numpy_fn` outermost.
+- **`@signal_fn` vs `@numpy_fn` for time-series**: `signal_fn` handles
+  axis-aware conversion (channel-first vs sample-first).
+- **`@cache_disk` on non-picklable returns**: swap to `@cache_mem`.
 
 ## See also
 
-- `scitex-config` — `local_state.runtime_path` is where the cache
-  directory comes from
-- General skill `01_arch_06_local-state-directories.md` — cache
-  layout policy
+- `scitex-config` — `local_state.runtime_path` source
+- General `01_arch_06_local-state-directories.md` — cache layout policy
