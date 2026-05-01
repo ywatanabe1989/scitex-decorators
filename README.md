@@ -102,7 +102,9 @@ umbrella package's `scitex.decorators` import path is preserved via a
 
 ## Part of SciTeX
 
-`scitex-decorators` is part of [**SciTeX**](https://scitex.ai).
+`scitex-decorators` is part of [**SciTeX**](https://scitex.ai). Install via
+the umbrella with `pip install scitex[decorators]` to use as
+`scitex.decorators` (Python).
 
 >Four Freedoms for Research
 >
