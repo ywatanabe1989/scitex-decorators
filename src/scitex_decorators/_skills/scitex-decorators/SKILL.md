@@ -1,15 +1,17 @@
 ---
 name: scitex-decorators
-description: Decorator library for SciTeX scientific code. Type-conversion family (`@numpy_fn`, `@torch_fn`, `@pandas_fn`, `@xarray_fn`, `@signal_fn`) lets a function declare its native array type and accept any of the others — the decorator converts on entry and back on exit, including `cuda` round-trips. Caching family (`@cache_disk`, `@cache_disk_async`, `@cache_mem`) memoizes pure functions. `@batch_fn` chunks large inputs through GPU/memory limits; combinator decorators (`batch_numpy_fn`, `batch_torch_fn`, …) compose batching with type conversion. Lifecycle: `@deprecated`, `@not_implemented`, `@timeout`, `@preserve_doc`, `@wrap`. `@AutoOrderDecorator` resolves stacking order so users don't memorise the right decorator ordering. Drop-in replacement for hand-rolled `if isinstance(x, torch.Tensor): x = x.cpu().numpy()` boilerplate, ad-hoc functools.lru_cache that doesn't survive process restart, and per-script for-loop GPU batching.
+description: |
+  [WHAT] Decorator library — type-conversion (`@numpy_fn`, `@torch_fn`, `@pandas_fn`, `@xarray_fn`, `@signal_fn`), caching (`@cache_disk`, `@cache_mem`), batching (`@batch_fn` + combinators), lifecycle (`@deprecated`, `@timeout`, ...), and `@AutoOrderDecorator` for stacking.
+  [WHEN] Writing functions that should accept any array type, memoize across processes, batch through GPU/memory limits, or be marked deprecated/timeout-bounded.
+  [HOW] `from scitex_decorators import numpy_fn, cache_disk, batch_fn, deprecated, ...` — apply as decorators; combinators compose batching with conversion.
+tags: [scitex-decorators]
 primary_interface: python
 interfaces:
   python: 3
   cli: 0
   mcp: 0
   skills: 2
-  hook: 0
   http: 0
-tags: [scitex-decorators, scitex-package, decorators, numpy, torch, pandas, caching]
 ---
 
 > **Interfaces:** Python ⭐⭐⭐ (primary) · Skills ⭐⭐
