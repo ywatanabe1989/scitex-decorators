@@ -78,3 +78,11 @@ memorize it. `enable_auto_order()` / `disable_auto_order()`.
 - `@cache_disk` on non-picklable returns: swap to `@cache_mem`.
 
 See `scitex-config` for `local_state.runtime_path`; general `01_arch_06_local-state-directories.md` for cache layout policy.
+
+## Sub-skills
+
+- [01_installation.md](01_installation.md) — pip install + extras + smoke verify
+- [02_quick-start.md](02_quick-start.md) — type-conversion, caching, batching, lifecycle
+- [03_python-api.md](03_python-api.md) — full grouped public API
+
+No CLI, no MCP tools.
