@@ -135,8 +135,7 @@ def enable_auto_order():
     >>> def my_func(x):
     ...     return x.mean()
     """
-    import scitex.decorators as decorators_module
-
+    import scitex_decorators as decorators_module
     # Replace with auto-ordering versions
     decorators_module.torch_fn = torch_fn
     decorators_module.numpy_fn = numpy_fn
@@ -151,8 +150,7 @@ def enable_auto_order():
 
 def disable_auto_order():
     """Disable auto-ordering and restore original decorators."""
-    import scitex.decorators as decorators_module
-
+    import scitex_decorators as decorators_module
     # Restore original decorators
     decorators_module.torch_fn = _orig_torch_fn
     decorators_module.numpy_fn = _orig_numpy_fn

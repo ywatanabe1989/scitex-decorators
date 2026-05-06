@@ -26,7 +26,7 @@ def _resolve_cache_dir() -> str:
          ``~/.scitex/decorators/runtime/cache``).
     """
     try:
-        from scitex.config import get_paths
+        from scitex_config import get_paths
 
         return str(get_paths().function_cache)
     except Exception:
