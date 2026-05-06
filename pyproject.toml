@@ -21,7 +21,6 @@ dependencies = [
     "numpy",
     "tqdm",
     "scitex-config>=0.3.0",
-    "scitex",
 ]
 
 [project.optional-dependencies]
