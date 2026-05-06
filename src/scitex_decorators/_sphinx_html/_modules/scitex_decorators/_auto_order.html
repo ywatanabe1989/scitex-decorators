@@ -217,8 +217,7 @@
 <span class="sd">    &gt;&gt;&gt; def my_func(x):</span>
 <span class="sd">    ...     return x.mean()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">scitex.decorators</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">decorators_module</span>
-
+    <span class="kn">import</span><span class="w"> </span><span class="nn">scitex_decorators</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">decorators_module</span>
     <span class="c1"># Replace with auto-ordering versions</span>
     <span class="n">decorators_module</span><span class="o">.</span><span class="n">torch_fn</span> <span class="o">=</span> <span class="n">torch_fn</span>
     <span class="n">decorators_module</span><span class="o">.</span><span class="n">numpy_fn</span> <span class="o">=</span> <span class="n">numpy_fn</span>
@@ -236,8 +235,7 @@
 <a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.disable_auto_order">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">disable_auto_order</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Disable auto-ordering and restore original decorators.&quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">scitex.decorators</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">decorators_module</span>
-
+    <span class="kn">import</span><span class="w"> </span><span class="nn">scitex_decorators</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">decorators_module</span>
     <span class="c1"># Restore original decorators</span>
     <span class="n">decorators_module</span><span class="o">.</span><span class="n">torch_fn</span> <span class="o">=</span> <span class="n">_orig_torch_fn</span>
     <span class="n">decorators_module</span><span class="o">.</span><span class="n">numpy_fn</span> <span class="o">=</span> <span class="n">_orig_numpy_fn</span>
