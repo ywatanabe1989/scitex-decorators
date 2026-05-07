@@ -35,6 +35,30 @@ pip install "scitex-decorators[torch]"     # + torch_fn / batch_torch_fn
 pip install "scitex-decorators[all]"       # everything
 ```
 
+## Architecture
+
+```mermaid
+flowchart LR
+    AO["@auto_order"] --> CV["@*_fn converters"]
+    CV --> NP["@numpy_fn"]
+    CV --> PD["@pandas_fn"]
+    CV --> XR["@xarray_fn"]
+    CV --> TR["@torch_fn"]
+    CV --> SG["@signal_fn"]
+    BF["@batch_fn"] --> CV
+    CD["@cache_disk<br/>(joblib)"] -.-> NP & PD & TR
+    PD2["@preserve_doc"] -.-> NP & PD & TR & XR & SG
+    DEP["@deprecated"] -.-> NP & PD & TR
+    TO["@timeout"] -.-> CV
+    NI["@not_implemented"] -.-> CV
+    CO["@combined<br/>(stack of @*_fn)"] --> NP & PD & TR
+```
+
+Each `@<type>_fn` decorator converts inputs to the named type, calls the
+wrapped function, then converts back to the caller's original type. The
+diagram above shows how `_combined.py`, `_auto_order.py`, and the
+caching/timeout decorators compose around the converter family.
+
 ## Quick Start
 
 ```python
@@ -95,6 +119,16 @@ dec.is_torch(x) ; dec.is_cuda(x)
 4. `~/.cache/scitex-decorators/function_cache`
 
 So the package works without the umbrella scitex installed.
+
+## Demo
+
+```mermaid
+flowchart LR
+    C["caller passes pandas.DataFrame"] --> D["@numpy_fn"]
+    D --> N["function body sees numpy.ndarray"]
+    N --> R["function returns numpy.ndarray"]
+    R --> O["caller receives pandas.DataFrame<br/>(original type restored)"]
+```
 
 ## Status
 
