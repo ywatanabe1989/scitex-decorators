@@ -43,6 +43,7 @@ dev = [
     "ruff",
     "joblib",
     "pandas",
+    "scitex-dev>=0.11.5",
 ]
 docs = [
     "sphinx>=7.0",
