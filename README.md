@@ -9,7 +9,7 @@
 <p align="center"><b>Decorator library — type conversion (numpy/torch/pandas/xarray), caching, batching, lifecycle.</b></p>
 
 <p align="center">
-  <a href="https://scitex-decorators.readthedocs.io/">Full Documentation</a> · <code>pip install scitex-decorators</code>
+  <a href="https://scitex-decorators.readthedocs.io/">Full Documentation</a> · <code>uv pip install scitex-decorators[all]</code>
 </p>
 
 <!-- scitex-badges:start -->
