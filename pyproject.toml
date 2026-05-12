@@ -41,8 +41,10 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
     "ruff",
-    "joblib",
-    "pandas",
+    "joblib",       # tests/scitex_decorators/_cache/test__cache_disk{,_async}.py
+    "pandas",       # tests/scitex_decorators/test__{pandas,torch,xarray,signal,numpy,batch,auto_order,combined}_fn.py
+    "torch",        # tests/scitex_decorators/test__{torch,pandas,xarray,signal,numpy,batch,auto_order,converters}_fn.py
+    "xarray",       # tests/scitex_decorators/test__{xarray,pandas,torch,signal}_fn.py
     "scitex-dev>=0.11.7",
 ]
 docs = [
@@ -76,6 +78,11 @@ scitex-decorators = "scitex_decorators"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--disable-warnings"]
+
+[tool.coverage.run]
+parallel = true
+source = ["scitex_decorators"]
+concurrency = ["multiprocessing", "thread"]
 
 [tool.ruff]
 target-version = "py39"

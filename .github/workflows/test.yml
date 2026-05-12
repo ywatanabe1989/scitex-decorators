@@ -26,7 +26,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pytest pytest-cov pytest-timeout
-          pip install -e ".[dev]" || pip install -e .
+          pip install -e ".[all,dev]" || pip install -e ".[dev]" || pip install -e .
       - name: Detect import name
         id: pkg
         run: |
@@ -38,9 +38,27 @@ jobs:
             --cov=src/${{ steps.pkg.outputs.import_name }} \
             --cov-report=xml --cov-report=term
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v4
+        if: always() && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
           fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+
+  install-check:
+    # Catches undeclared runtime deps that the package's own test suite misses.
+    # A package can build, upload, and pass its own tests with the wrong
+    # pyproject.toml — the bug only shows up when a fresh user runs
+    # `pip install <pkg>` in a clean venv. This job reproduces that path.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install + import in a fresh venv
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -e .
+          .venv/bin/python -c "import scitex_decorators; print(f'OK: {scitex_decorators.__name__}')"

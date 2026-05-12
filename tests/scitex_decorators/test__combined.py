@@ -6,10 +6,11 @@ import pytest
 
 # Required for scitex_decorators module
 pytest.importorskip("tqdm")
+# Optional dep (extra="pandas") — skip module if absent. See PA-303.
+pd = pytest.importorskip("pandas")
 import unittest.mock as mock
 
 import numpy as np
-import pandas as pd
 
 
 def test_combined_torch_batch_fn_exists():
