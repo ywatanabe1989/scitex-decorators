@@ -19,6 +19,8 @@ try:
     del _v, PackageNotFoundError
 except ImportError:  # pragma: no cover — only on ancient Pythons
     __version__ = "0.0.0+local"
+from scitex_dev import try_import_optional
+
 from ._auto_order import (
     AutoOrderDecorator,
     batch_fn,
@@ -51,13 +53,36 @@ from ._converters import (
 from ._deprecated import deprecated
 from ._not_implemented import not_implemented
 from ._numpy_fn import numpy_fn
-from ._pandas_fn import pandas_fn
 from ._preserve_doc import preserve_doc
 from ._signal_fn import signal_fn
 from ._timeout import timeout
-from ._torch_fn import torch_fn
 from ._wrap import wrap
-from ._xarray_fn import xarray_fn
+
+# Heavy-extra decorators — gated via `try_import_optional`. Each public name
+# stays in `__all__` regardless (Pattern A from
+# `_skills/general/03_interface_01_python-api/04_lazy-imports-and-optional-deps.md`)
+# so user code probes with `is None` and surfaces an installable hint.
+torch_fn = try_import_optional(
+    "._torch_fn",
+    attr="torch_fn",
+    extra="torch",
+    pkg="scitex-decorators",
+    package=__name__,
+)
+pandas_fn = try_import_optional(
+    "._pandas_fn",
+    attr="pandas_fn",
+    extra="pandas",
+    pkg="scitex-decorators",
+    package=__name__,
+)
+xarray_fn = try_import_optional(
+    "._xarray_fn",
+    attr="xarray_fn",
+    extra="xarray",
+    pkg="scitex-decorators",
+    package=__name__,
+)
 
 __all__ = [
     "__version__",
