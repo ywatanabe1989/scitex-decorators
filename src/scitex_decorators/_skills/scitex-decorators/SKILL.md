@@ -14,8 +14,6 @@ interfaces:
   http: 0
 ---
 
-> **Interfaces:** Python ⭐⭐⭐ (primary) · Skills ⭐⭐
-
 # scitex-decorators
 
 Four families: type-conversion, caching, batching, lifecycle.
