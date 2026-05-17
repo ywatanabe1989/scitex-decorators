@@ -14,16 +14,27 @@
 
 <!-- scitex-badges:start -->
 <p align="center">
-  <a href="https://pypi.org/project/scitex-decorators/"><img src="https://img.shields.io/pypi/v/scitex-decorators.svg" alt="PyPI"></a>
-  <a href="https://pypi.org/project/scitex-decorators/"><img src="https://img.shields.io/pypi/pyversions/scitex-decorators.svg" alt="Python"></a>
-  <a href="https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/test.yml"><img src="https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
-  <a href="https://codecov.io/gh/ywatanabe1989/scitex-decorators"><img src="https://codecov.io/gh/ywatanabe1989/scitex-decorators/graph/badge.svg" alt="Coverage"></a>
-  <a href="https://scitex-decorators.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/scitex-decorators/badge/?version=latest" alt="Docs"></a>
-  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/license-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
+  <a href="https://pypi.org/project/scitex-decorators/"><img src="https://img.shields.io/pypi/v/scitex-decorators?label=pypi" alt="pypi"></a>
+  <a href="https://pypi.org/project/scitex-decorators/"><img src="https://img.shields.io/pypi/pyversions/scitex-decorators?label=python" alt="python"></a>
+  <a href="https://scitex-decorators.readthedocs.io/en/latest/"><img src="https://img.shields.io/readthedocs/scitex-decorators?label=docs" alt="docs"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-decorators/test.yml?branch=develop&label=tests" alt="tests"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/import-smoke-on-ubuntu-py3-12.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-decorators/import-smoke-on-ubuntu-py3-12.yml?branch=develop&label=install-check" alt="install-check"></a>
+  <a href="https://github.com/ywatanabe1989/scitex-decorators/actions/workflows/scitex-dev-quality-audit-on-ubuntu-latest.yml"><img src="https://img.shields.io/github/actions/workflow/status/ywatanabe1989/scitex-decorators/scitex-dev-quality-audit-on-ubuntu-latest.yml?branch=develop&label=quality" alt="quality"></a>
+  <a href="https://codecov.io/gh/ywatanabe1989/scitex-decorators"><img src="https://img.shields.io/codecov/c/github/ywatanabe1989/scitex-decorators/develop?label=cov" alt="cov"></a>
 </p>
 <!-- scitex-badges:end -->
 
 ---
+
+## Problem and Solution
+
+| # | Problem | Solution |
+|---|---------|----------|
+| 1 | **Array-type plumbing** — functions that should accept numpy / torch / pandas / xarray end up reimplementing isinstance dispatch + back-conversion every time. | **`@numpy_fn`, `@torch_fn`, `@pandas_fn`, `@xarray_fn`, `@signal_fn`** convert inputs to the named type, run the wrapped function, and restore the caller's original type on the way out. |
+| 2 | **Expensive recomputations** dominate dev cycles; ad-hoc `pickle` caches drift in invalidation and disk layout. | **`@cache_disk` (joblib) / `@cache_disk_async` / `@cache_mem`** give SciTeX-aware disk + memory caching with a documented cache-dir resolution order (`scitex.config` → `$SCITEX_CACHE_DIR` → XDG → `~/.cache`). |
+| 3 | **GPU / memory limits** force researchers to hand-batch tensors, often re-deriving the loop per project. | **`@batch_fn` + `@batch_numpy_fn` / `@batch_torch_fn` / `@batch_pandas_fn`** chunk inputs through the wrapped function and reassemble outputs; compose cleanly with the `@*_fn` converters. |
 
 ## Installation
 
