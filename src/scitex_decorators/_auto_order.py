@@ -16,7 +16,7 @@ and then applied in the correct order when the function is first called.
 
 Example
 -------
->>> from scitex.decorators import enable_auto_order
+>>> from scitex_decorators import enable_auto_order
 >>> enable_auto_order()
 >>>
 >>> # These will all work identically:
@@ -35,7 +35,7 @@ prevents common errors from incorrect decorator stacking.
 """
 
 from functools import wraps
-from typing import Any, Callable, List, Tuple
+from typing import Callable
 
 from ._batch_fn import batch_fn as _orig_batch_fn
 from ._numpy_fn import numpy_fn as _orig_numpy_fn
@@ -120,22 +120,23 @@ batch_fn = AutoOrderDecorator("batch_fn")
 # Enable auto-ordering globally
 def enable_auto_order():
     """
-    Enable auto-ordering for all decorators in the scitex.decorators module.
+    Enable auto-ordering for all decorators in the scitex_decorators module.
 
     This replaces the standard decorators with auto-ordering versions.
 
     Example
     -------
-    >>> import scitex
-    >>> scitex.decorators.enable_auto_order()
+    >>> import scitex_decorators
+    >>> scitex_decorators.enable_auto_order()
     >>>
     >>> # Now decorators will auto-order regardless of how they're written
-    >>> @scitex.decorators.batch_fn
-    >>> @scitex.decorators.torch_fn
+    >>> @scitex_decorators.batch_fn
+    >>> @scitex_decorators.torch_fn
     >>> def my_func(x):
     ...     return x.mean()
     """
     import scitex_decorators as decorators_module
+
     # Replace with auto-ordering versions
     decorators_module.torch_fn = torch_fn
     decorators_module.numpy_fn = numpy_fn
@@ -151,6 +152,7 @@ def enable_auto_order():
 def disable_auto_order():
     """Disable auto-ordering and restore original decorators."""
     import scitex_decorators as decorators_module
+
     # Restore original decorators
     decorators_module.torch_fn = _orig_torch_fn
     decorators_module.numpy_fn = _orig_numpy_fn
