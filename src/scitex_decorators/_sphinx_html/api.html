@@ -263,15 +263,15 @@ executing the original deprecated function.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="scitex_decorators.enable_auto_order">
 <span class="sig-prename descclassname"><span class="pre">scitex_decorators.</span></span><span class="sig-name descname"><span class="pre">enable_auto_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scitex_decorators/_auto_order.html#enable_auto_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_decorators.enable_auto_order" title="Link to this definition"></a></dt>
-<dd><p>Enable auto-ordering for all decorators in the scitex.decorators module.</p>
+<dd><p>Enable auto-ordering for all decorators in the scitex_decorators module.</p>
 <p>This replaces the standard decorators with auto-ordering versions.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">scitex</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">scitex</span><span class="o">.</span><span class="n">decorators</span><span class="o">.</span><span class="n">enable_auto_order</span><span class="p">()</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">scitex_decorators</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">scitex_decorators</span><span class="o">.</span><span class="n">enable_auto_order</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Now decorators will auto-order regardless of how they&#39;re written</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nd">@scitex</span><span class="o">.</span><span class="n">decorators</span><span class="o">.</span><span class="n">batch_fn</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nd">@scitex</span><span class="o">.</span><span class="n">decorators</span><span class="o">.</span><span class="n">torch_fn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@scitex_decorators</span><span class="o">.</span><span class="n">batch_fn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@scitex_decorators</span><span class="o">.</span><span class="n">torch_fn</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 </pre></div>
