@@ -21,67 +21,149 @@ torch = pytest.importorskip("torch")
 
 
 class TestConversionWarning:
-    def test_is_userwarning_subclass(self):
-        assert issubclass(ConversionWarning, UserWarning)
+    def test_conversion_warning_is_userwarning_subclass(self):
+        # Arrange
+        cls = ConversionWarning
+        # Act
+        is_subclass = issubclass(cls, UserWarning)
+        # Assert
+        assert is_subclass
 
 
 class TestIsTorch:
-    def test_true_for_tensor_arg(self):
-        assert is_torch(torch.zeros(3)) is True
+    def test_is_torch_returns_true_for_tensor_positional_arg(self):
+        # Arrange
+        t = torch.zeros(3)
+        # Act
+        result = is_torch(t)
+        # Assert
+        assert result is True
 
-    def test_true_for_tensor_kwarg(self):
-        assert is_torch(x=torch.zeros(3)) is True
+    def test_is_torch_returns_true_for_tensor_keyword_arg(self):
+        # Arrange
+        t = torch.zeros(3)
+        # Act
+        result = is_torch(x=t)
+        # Assert
+        assert result is True
 
-    def test_false_for_numpy_only(self):
-        assert is_torch(np.zeros(3)) is False
+    def test_is_torch_returns_false_for_numpy_only_arg(self):
+        # Arrange
+        arr = np.zeros(3)
+        # Act
+        result = is_torch(arr)
+        # Assert
+        assert result is False
 
-    def test_false_for_no_args(self):
-        assert is_torch() is False
+    def test_is_torch_returns_false_when_no_args_given(self):
+        # Arrange
+        # (no args)
+        # Act
+        result = is_torch()
+        # Assert
+        assert result is False
 
 
 class TestReturnAlways:
-    def test_always_returns_args_kwargs_tuple(self):
+    def test_return_always_returns_args_kwargs_tuple_pair(self):
+        # Arrange
+        # (inline args)
+        # Act
         out = _return_always(1, 2, x=3)
+        # Assert
         assert out == ((1, 2), {"x": 3})
 
-    def test_no_args_no_kwargs(self):
-        assert _return_always() == ((), {})
+    def test_return_always_handles_no_args_no_kwargs(self):
+        # Arrange
+        # (no args)
+        # Act
+        out = _return_always()
+        # Assert
+        assert out == ((), {})
 
 
 class TestReturnIf:
-    def test_args_only(self):
-        assert _return_if(1, 2) == (1, 2)
+    def test_return_if_with_args_only_returns_args_tuple(self):
+        # Arrange
+        # (inline args)
+        # Act
+        out = _return_if(1, 2)
+        # Assert
+        assert out == (1, 2)
 
-    def test_kwargs_only(self):
-        assert _return_if(x=1) == {"x": 1}
+    def test_return_if_with_kwargs_only_returns_kwargs_dict(self):
+        # Arrange
+        # (inline args)
+        # Act
+        out = _return_if(x=1)
+        # Assert
+        assert out == {"x": 1}
 
-    def test_both_returns_tuple(self):
+    def test_return_if_with_both_returns_pair_tuple(self):
+        # Arrange
+        # (inline args)
+        # Act
         out = _return_if(1, x=2)
+        # Assert
         assert out == ((1,), {"x": 2})
 
-    def test_neither_returns_none(self):
-        assert _return_if() is None
+    def test_return_if_with_neither_returns_none(self):
+        # Arrange
+        # (no args)
+        # Act
+        out = _return_if()
+        # Assert
+        assert out is None
 
 
 class TestToNumpy:
-    def test_numpy_array_passes_through_in_tuple(self):
+    def test_to_numpy_wraps_numpy_array_in_one_tuple(self):
+        # Arrange
         arr = np.array([1, 2, 3])
+        # Act
         out = to_numpy(arr)
-        # to_numpy returns a 1-tuple of converted positional args.
+        # Assert
         assert isinstance(out, tuple) and len(out) == 1
-        np.testing.assert_array_equal(out[0], arr)
 
-    def test_torch_tensor_converts(self):
+    def test_to_numpy_preserves_numpy_array_values_inside_tuple(self):
+        # Arrange
+        arr = np.array([1, 2, 3])
+        # Act
+        out = to_numpy(arr)
+        # Assert
+        assert np.array_equal(out[0], arr)
+
+    def test_to_numpy_converts_torch_tensor_to_ndarray_inside_tuple(self):
+        # Arrange
         t = torch.tensor([1.0, 2.0, 3.0])
+        # Act
         out = to_numpy(t)
-        assert isinstance(out, tuple) and len(out) == 1
+        # Assert
         assert isinstance(out[0], np.ndarray)
-        np.testing.assert_array_equal(out[0], [1.0, 2.0, 3.0])
 
-    def test_list_kept_as_is_inside_tuple(self):
-        # Python lists are returned untouched inside the tuple wrapper —
-        # the converter only transforms torch tensors / numpy arrays.
-        out = to_numpy([1, 2, 3])
+    def test_to_numpy_returns_one_element_tuple_for_torch_input(self):
+        # Arrange
+        t = torch.tensor([1.0, 2.0, 3.0])
+        # Act
+        out = to_numpy(t)
+        # Assert
+        assert isinstance(out, tuple) and len(out) == 1
+
+    def test_to_numpy_preserves_torch_tensor_values_after_conversion(self):
+        # Arrange
+        t = torch.tensor([1.0, 2.0, 3.0])
+        expected = np.array([1.0, 2.0, 3.0])
+        # Act
+        out = to_numpy(t)
+        # Assert
+        assert np.array_equal(out[0], expected)
+
+    def test_to_numpy_returns_python_list_untouched_inside_tuple(self):
+        # Arrange
+        lst = [1, 2, 3]
+        # Act
+        out = to_numpy(lst)
+        # Assert
         assert out == ([1, 2, 3],)
 
 

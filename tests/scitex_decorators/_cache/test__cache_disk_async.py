@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Time-stamp: "2026-01-04 21:20:00 (ywatanabe)"
-# File: ./tests/scitex/decorators/test__cache_disk_async.py
+# Time-stamp: "2026-05-18 (rewrite)"
+# File: ./tests/scitex_decorators/_cache/test__cache_disk_async.py
 
 """Test cache_disk_async decorator functionality.
 
@@ -9,6 +9,7 @@ using joblib.Memory.
 """
 
 import asyncio
+import inspect
 
 import pytest
 
@@ -17,165 +18,192 @@ pytest.importorskip("joblib")
 from scitex_decorators import cache_disk_async
 
 
-class TestCacheDiskAsync:
-    """Test cache_disk_async decorator"""
+# ---------------------------------------------------------------------------
+# Import check
+# ---------------------------------------------------------------------------
+def test_cache_disk_async_import_exposes_callable():
+    # Arrange
+    from scitex_decorators import cache_disk_async as imported
+    # Act
+    result = callable(imported)
+    # Assert
+    assert result is True
 
-    def test_cache_disk_async_import(self):
-        """Test that cache_disk_async can be imported"""
-        from scitex_decorators import cache_disk_async
 
-        assert callable(cache_disk_async)
+# ---------------------------------------------------------------------------
+# Basic functionality — first and second call return same result
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def basic_async_runner():
+    # Arrange
+    state = {"count": 0}
 
-    @pytest.mark.asyncio
-    async def test_cache_disk_async_basic_functionality(self):
-        """Test basic async function caching"""
-        call_count = 0
+    @cache_disk_async
+    async def async_square(x):
+        state["count"] += 1
+        await asyncio.sleep(0.01)
+        return x**2
 
-        @cache_disk_async
-        async def async_square(x):
-            nonlocal call_count
-            call_count += 1
-            await asyncio.sleep(0.01)
-            return x**2
+    # Act
+    r1 = asyncio.run(async_square(5))
+    r2 = asyncio.run(async_square(5))
+    return {"r1": r1, "r2": r2}
 
-        # First call should execute the function
-        result1 = await async_square(5)
-        assert result1 == 25
-        first_count = call_count
 
-        # Second call with same args should use cache
-        result2 = await async_square(5)
-        assert result2 == 25
-        # call_count may or may not increase depending on cache implementation
-        assert result1 == result2
+def test_cache_disk_async_basic_first_call_returns_square(basic_async_runner):
+    # Arrange
+    info = basic_async_runner
+    # Act
+    r1 = info["r1"]
+    # Assert
+    assert r1 == 25
 
-    @pytest.mark.asyncio
-    async def test_cache_disk_async_with_different_args(self):
-        """Test caching with different arguments"""
 
-        @cache_disk_async
-        async def async_multiply(x, y):
-            await asyncio.sleep(0.01)
-            return x * y
+def test_cache_disk_async_basic_second_call_returns_same(basic_async_runner):
+    # Arrange
+    info = basic_async_runner
+    # Act
+    r2 = info["r2"]
+    # Assert
+    assert r2 == 25
 
-        result1 = await async_multiply(3, 4)
-        result2 = await async_multiply(5, 6)
 
-        assert result1 == 12
-        assert result2 == 30
+# ---------------------------------------------------------------------------
+# Different arguments produce different cached results
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def different_args_async_runner():
+    # Arrange
+    @cache_disk_async
+    async def async_multiply(x, y):
+        await asyncio.sleep(0.01)
+        return x * y
 
-    @pytest.mark.asyncio
-    async def test_cache_disk_async_with_kwargs(self):
-        """Test caching with keyword arguments"""
+    # Act
+    r1 = asyncio.run(async_multiply(3, 4))
+    r2 = asyncio.run(async_multiply(5, 6))
+    return {"r1": r1, "r2": r2}
 
-        @cache_disk_async
-        async def async_power(base, exponent=2):
-            await asyncio.sleep(0.01)
-            return base**exponent
 
-        result1 = await async_power(3)
-        result2 = await async_power(3, exponent=3)
+def test_cache_disk_async_different_args_first_product(different_args_async_runner):
+    # Arrange
+    info = different_args_async_runner
+    # Act
+    r1 = info["r1"]
+    # Assert
+    assert r1 == 12
 
-        assert result1 == 9
-        assert result2 == 27
 
-    @pytest.mark.asyncio
-    async def test_cache_disk_async_return_types(self):
-        """Test caching with various return types"""
+def test_cache_disk_async_different_args_second_product(different_args_async_runner):
+    # Arrange
+    info = different_args_async_runner
+    # Act
+    r2 = info["r2"]
+    # Assert
+    assert r2 == 30
 
-        @cache_disk_async
-        async def async_return_dict(key, value):
-            await asyncio.sleep(0.01)
-            return {key: value}
 
-        result = await async_return_dict("test", 42)
-        assert result == {"test": 42}
+# ---------------------------------------------------------------------------
+# Keyword arguments produce distinct cache entries
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def kwargs_async_runner():
+    # Arrange
+    @cache_disk_async
+    async def async_power(base, exponent=2):
+        await asyncio.sleep(0.01)
+        return base**exponent
 
-    @pytest.mark.asyncio
-    async def test_cache_disk_async_preserves_function_metadata(self):
-        """Test that decorator preserves function metadata"""
+    # Act
+    r_default = asyncio.run(async_power(3))
+    r_custom = asyncio.run(async_power(3, exponent=3))
+    return {"default": r_default, "custom": r_custom}
 
-        @cache_disk_async
-        async def documented_async_func(x):
-            """This is a documented async function"""
-            return x * 2
 
-        assert documented_async_func.__name__ == "documented_async_func"
-        assert documented_async_func.__doc__ == "This is a documented async function"
+def test_cache_disk_async_kwargs_default_exponent_returns_nine(kwargs_async_runner):
+    # Arrange
+    info = kwargs_async_runner
+    # Act
+    val = info["default"]
+    # Assert
+    assert val == 9
 
-    @pytest.mark.asyncio
-    async def test_cache_disk_async_is_async(self):
-        """Test that decorated function is still async"""
-        import inspect
 
-        @cache_disk_async
-        async def async_identity(x):
-            return x
+def test_cache_disk_async_kwargs_custom_exponent_returns_twentyseven(kwargs_async_runner):
+    # Arrange
+    info = kwargs_async_runner
+    # Act
+    val = info["custom"]
+    # Assert
+    assert val == 27
 
-        assert inspect.iscoroutinefunction(async_identity)
+
+# ---------------------------------------------------------------------------
+# Caching dict return type
+# ---------------------------------------------------------------------------
+def test_cache_disk_async_returns_dict_value_correctly():
+    # Arrange
+    @cache_disk_async
+    async def async_return_dict(key, value):
+        await asyncio.sleep(0.01)
+        return {key: value}
+
+    # Act
+    result = asyncio.run(async_return_dict("test", 42))
+    # Assert
+    assert result == {"test": 42}
+
+
+# ---------------------------------------------------------------------------
+# Function metadata preservation
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def metadata_async_runner():
+    # Arrange
+    @cache_disk_async
+    async def documented_async_func(x):
+        """This is a documented async function"""
+        return x * 2
+
+    return documented_async_func
+
+
+def test_cache_disk_async_preserves_function_name(metadata_async_runner):
+    # Arrange
+    func = metadata_async_runner
+    # Act
+    name = func.__name__
+    # Assert
+    assert name == "documented_async_func"
+
+
+def test_cache_disk_async_preserves_function_docstring(metadata_async_runner):
+    # Arrange
+    func = metadata_async_runner
+    # Act
+    doc = func.__doc__
+    # Assert
+    assert doc == "This is a documented async function"
+
+
+# ---------------------------------------------------------------------------
+# Decorated function remains a coroutine function
+# ---------------------------------------------------------------------------
+def test_cache_disk_async_decorated_function_is_coroutine():
+    # Arrange
+    @cache_disk_async
+    async def async_identity(x):
+        return x
+
+    # Act
+    is_coro = inspect.iscoroutinefunction(async_identity)
+    # Assert
+    assert is_coro is True
 
 
 if __name__ == "__main__":
     import os
 
-    import pytest
-
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_cache_disk_async.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Timestamp: "2025-12-09 (ywatanabe)"
-# # File: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_cache_disk_async.py
-# # ----------------------------------------
-# from __future__ import annotations
-# import os
-#
-# __FILE__ = "./src/scitex/decorators/_cache_disk_async.py"
-# __DIR__ = os.path.dirname(__FILE__)
-# # ----------------------------------------
-# """Async disk caching decorator using joblib.Memory."""
-#
-# import asyncio
-# import functools
-#
-# from joblib import Memory as _Memory
-#
-# from scitex.config import get_paths
-#
-#
-# def cache_disk_async(func):
-#     """Disk caching decorator for async functions.
-#
-#     Usage:
-#         @cache_disk_async
-#         async def expensive_async_function(x):
-#             await asyncio.sleep(1)
-#             return x ** 2
-#     """
-#     cache_dir = str(get_paths().function_cache)
-#     memory = _Memory(cache_dir, verbose=0)
-#
-#     # Create sync wrapper for joblib
-#     def sync_wrapper(*args, **kwargs):
-#         return asyncio.run(func(*args, **kwargs))
-#
-#     cached_sync = memory.cache(sync_wrapper)
-#
-#     @functools.wraps(func)
-#     async def async_wrapper(*args, **kwargs):
-#         # Run cached sync version in executor to avoid blocking
-#         loop = asyncio.get_event_loop()
-#         result = await loop.run_in_executor(None, lambda: cached_sync(*args, **kwargs))
-#         return result
-#
-#     return async_wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_cache_disk_async.py
-# --------------------------------------------------------------------------------
+# EOF

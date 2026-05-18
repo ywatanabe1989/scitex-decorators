@@ -19,580 +19,82 @@ pytest.importorskip("tqdm")
 from scitex_decorators import timeout
 
 
-def test_timeout_decorator_success():
-    """Test that timeout decorator allows functions to complete within time limit."""
-
+def test_timeout_decorator_returns_success_value_when_within_limit():
+    """Timeout decorator should return the wrapped function's value when it
+    finishes before the timeout window elapses."""
+    # Arrange
     @timeout(seconds=2, error_message="Test timed out")
     def quick_function():
         time.sleep(0.5)
         return "Success"
 
+    # Act
     result = quick_function()
+    # Assert
     assert result == "Success"
 
 
-def test_timeout_decorator_raises_exception():
-    """Test that timeout decorator raises TimeoutError for functions exceeding time limit."""
-
+def test_timeout_decorator_raises_timeout_error_when_exceeding_limit():
+    """Timeout decorator should raise TimeoutError when the wrapped function
+    takes longer than the allowed time budget."""
+    # Arrange
     @timeout(seconds=0.5, error_message="Custom timeout message")
     def slow_function():
         time.sleep(1)
         return "This should not be returned"
 
-    with pytest.raises(TimeoutError) as excinfo:
+    ctx = pytest.raises(TimeoutError)
+    # Act
+    # Assert
+    with ctx:
         slow_function()
 
-    assert "Custom timeout message" in str(excinfo.value)
 
-
-def test_timeout_with_arguments():
-    """Test timeout decorator with functions that take arguments."""
-
-    @timeout(seconds=1)
-    def function_with_args(xx, yy):
-        time.sleep(0.2)
-        return xx + yy
-
-    result = function_with_args(2, 3)
-    assert result == 5
-
-
-def test_timeout_with_keyword_arguments():
-    """Test timeout decorator with functions that take keyword arguments."""
-
-    @timeout(seconds=1)
-    def function_with_kwargs(xx=0, yy=0):
-        time.sleep(0.2)
-        return xx * yy
-
-    result = function_with_kwargs(xx=5, yy=4)
-    assert result == 20
-
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-
-
-def test_timeout_decorator_success():
-    """Test that timeout decorator allows functions to complete within time limit."""
-
-    @timeout(seconds=2, error_message="Test timed out")
-    def quick_function():
-        time.sleep(0.5)
-        return "Success"
-
-    result = quick_function()
-    assert result == "Success"
-
-
-def test_timeout_decorator_raises_exception():
-    """Test that timeout decorator raises TimeoutError for functions exceeding time limit."""
-
+def test_timeout_decorator_includes_custom_error_message_on_timeout():
+    """When the timeout fires, the raised TimeoutError's message should
+    contain the user-supplied ``error_message`` string."""
+    # Arrange
     @timeout(seconds=0.5, error_message="Custom timeout message")
     def slow_function():
         time.sleep(1)
         return "This should not be returned"
 
-    with pytest.raises(TimeoutError) as excinfo:
+    ctx = pytest.raises(TimeoutError, match="Custom timeout message")
+    # Act
+    # Assert
+    with ctx:
         slow_function()
 
-    assert "Custom timeout message" in str(excinfo.value)
 
-
-def test_timeout_with_arguments():
-    """Test timeout decorator with functions that take arguments."""
-
+def test_timeout_decorator_forwards_positional_arguments_correctly():
+    """Timeout decorator should forward positional arguments to the wrapped
+    function so its computed result is returned unchanged."""
+    # Arrange
     @timeout(seconds=1)
     def function_with_args(xx, yy):
         time.sleep(0.2)
         return xx + yy
 
+    # Act
     result = function_with_args(2, 3)
+    # Assert
     assert result == 5
 
 
-def test_timeout_with_keyword_arguments():
-    """Test timeout decorator with functions that take keyword arguments."""
-
+def test_timeout_decorator_forwards_keyword_arguments_correctly():
+    """Timeout decorator should forward keyword arguments to the wrapped
+    function so its computed result is returned unchanged."""
+    # Arrange
     @timeout(seconds=1)
     def function_with_kwargs(xx=0, yy=0):
         time.sleep(0.2)
         return xx * yy
 
+    # Act
     result = function_with_kwargs(xx=5, yy=4)
+    # Assert
     assert result == 20
 
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywata1989@gmail.com)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import os
@@ -601,65 +103,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_timeout.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:58:41 (ywatanabe)"
-# # File: ./scitex_repo/src/scitex/decorators/_timeout.py
-#
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-04-23 19:11:33"
-# # Author: Yusuke Watanabe (ywatanabe@scitex.ai)
-#
-# """
-# This script does XYZ.
-# """
-#
-# """
-# Imports
-# """
-#
-#
-# """
-# Config
-# """
-# # CONFIG = scitex.gen.load_configs()
-#
-# """
-# Functions & Classes
-# """
-# from multiprocessing import Process, Queue
-#
-#
-# def timeout(seconds=10, error_message="Timeout"):
-#     def decorator(func):
-#         def wrapper(*args, **kwargs):
-#             def queue_wrapper(queue, args, kwargs):
-#                 result = func(*args, **kwargs)
-#                 queue.put(result)
-#
-#             queue = Queue()
-#             args_for_process = (queue, args, kwargs)
-#             process = Process(target=queue_wrapper, args=args_for_process)
-#             process.start()
-#             process.join(timeout=seconds)
-#
-#             if process.is_alive():
-#                 process.terminate()
-#                 raise TimeoutError(error_message)
-#             else:
-#                 return queue.get()
-#
-#         return wrapper
-#
-#     return decorator
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_timeout.py
-# --------------------------------------------------------------------------------
+# EOF
