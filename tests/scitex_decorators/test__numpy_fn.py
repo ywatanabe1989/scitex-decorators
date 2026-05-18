@@ -9,7 +9,6 @@ __DIR__ = os.path.dirname(__FILE__)
 # ----------------------------------------
 
 from functools import wraps
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -25,101 +24,200 @@ from scitex_decorators import numpy_fn
 
 
 @pytest.fixture
-def test_data():
-    """Create test data for tests."""
-    return {
-        "list": [1.0, 2.0, 3.0],
-        "numpy": np.array([1.0, 2.0, 3.0]),
-        "pandas_series": pd.Series([1.0, 2.0, 3.0]),
-        "pandas_df": pd.DataFrame({"col1": [1.0, 2.0, 3.0]}),
-        "torch": torch.tensor([1.0, 2.0, 3.0]),
-    }
+def list_input():
+    # Arrange
+    return [1.0, 2.0, 3.0]
 
 
-def test_numpy_fn_with_list_input(test_data):
-    """Test numpy_fn with list input."""
+@pytest.fixture
+def numpy_input():
+    # Arrange
+    return np.array([1.0, 2.0, 3.0])
 
+
+@pytest.fixture
+def torch_input():
+    # Arrange
+    return torch.tensor([1.0, 2.0, 3.0])
+
+
+@pytest.fixture
+def list_plus_one_result(list_input):
+    # Arrange
     @numpy_fn
-    def dummy_function(arr):
-        # Check that input is indeed a numpy array
-        assert isinstance(arr, np.ndarray)
+    def add_one(arr):
         return arr + 1.0
 
-    # Input is a list, output should be list
-    with patch(
-        "scitex_decorators.to_numpy",
-        return_value=([np.array([1.0, 2.0, 3.0])], {}),
-    ):
-        result = dummy_function(test_data["list"])
-        assert isinstance(result, list)
-        assert result == [2.0, 3.0, 4.0]
+    # Act
+    return add_one(list_input)
 
 
-def test_numpy_fn_with_numpy_input(test_data):
-    """Test numpy_fn with numpy input."""
+def test_numpy_fn_with_list_input_inner_receives_ndarray(list_input):
+    # Arrange
+    seen = {}
 
     @numpy_fn
-    def dummy_function(arr):
-        assert isinstance(arr, np.ndarray)
+    def capture_type(arr):
+        seen["type"] = type(arr)
+        return arr + 1.0
+
+    # Act
+    capture_type(list_input)
+    # Assert
+    assert seen["type"] is np.ndarray
+
+
+def test_numpy_fn_with_list_input_returns_list(list_plus_one_result):
+    # Arrange
+    expected_type = list
+    # Act
+    actual_type = type(list_plus_one_result)
+    # Assert
+    assert actual_type is expected_type
+
+
+def test_numpy_fn_with_list_input_returns_correct_values(list_plus_one_result):
+    # Arrange
+    expected = [2.0, 3.0, 4.0]
+    # Act
+    actual = list_plus_one_result
+    # Assert
+    assert actual == expected
+
+
+@pytest.fixture
+def numpy_doubled_result(numpy_input):
+    # Arrange
+    @numpy_fn
+    def doubler(arr):
         return arr * 2.0
 
-    # Input is numpy, output should be numpy
-    with patch(
-        "scitex_decorators.to_numpy",
-        return_value=([np.array([1.0, 2.0, 3.0])], {}),
-    ):
-        result = dummy_function(test_data["numpy"])
-        assert isinstance(result, np.ndarray)
-        np.testing.assert_allclose(result, np.array([2.0, 4.0, 6.0]))
+    # Act
+    return doubler(numpy_input)
 
 
-def test_numpy_fn_with_torch_input(test_data):
-    """Test numpy_fn with torch tensor input."""
+def test_numpy_fn_with_numpy_input_returns_ndarray(numpy_doubled_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = numpy_doubled_result
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_numpy_fn_with_numpy_input_returns_correct_values(numpy_doubled_result):
+    # Arrange
+    expected = np.array([2.0, 4.0, 6.0])
+    # Act
+    actual = numpy_doubled_result
+    # Assert
+    assert np.allclose(actual, expected)
+
+
+def test_numpy_fn_with_numpy_input_inner_receives_ndarray(numpy_input):
+    # Arrange
+    seen = {}
 
     @numpy_fn
-    def dummy_function(arr):
-        assert isinstance(arr, np.ndarray)
+    def capture_type(arr):
+        seen["type"] = type(arr)
+        return arr * 2.0
+
+    # Act
+    capture_type(numpy_input)
+    # Assert
+    assert seen["type"] is np.ndarray
+
+
+@pytest.fixture
+def torch_tripled_result(torch_input):
+    # Arrange
+    @numpy_fn
+    def tripler(arr):
         return arr * 3.0
 
-    # Mock to_numpy to return appropriate values
-    with patch(
-        "scitex_decorators.to_numpy",
-        return_value=([np.array([1.0, 2.0, 3.0])], {}),
-    ):
-        # Mock torch.tensor for return conversion
-        with patch("torch.tensor", return_value=torch.tensor([3.0, 6.0, 9.0])):
-            result = dummy_function(test_data["torch"])
-            assert isinstance(result, torch.Tensor)
-            torch.testing.assert_close(result, torch.tensor([3.0, 6.0, 9.0]))
+    # Act
+    return tripler(torch_input)
 
 
-def test_numpy_fn_nested_decorator(test_data):
-    """Test nested decorator behavior with numpy_fn."""
+def test_numpy_fn_with_torch_input_returns_tensor(torch_tripled_result):
+    # Arrange
+    expected_type = torch.Tensor
+    # Act
+    actual = torch_tripled_result
+    # Assert
+    assert isinstance(actual, expected_type)
 
-    # Create a dummy decorator to simulate nesting
+
+def test_numpy_fn_with_torch_input_returns_correct_values(torch_tripled_result):
+    # Arrange
+    expected = torch.tensor([3.0, 6.0, 9.0])
+    # Act
+    actual = torch_tripled_result
+    # Assert
+    assert torch.allclose(actual, expected)
+
+
+def test_numpy_fn_with_torch_input_inner_receives_ndarray(torch_input):
+    # Arrange
+    seen = {}
+
+    @numpy_fn
+    def capture_type(arr):
+        seen["type"] = type(arr)
+        return arr * 3.0
+
+    # Act
+    capture_type(torch_input)
+    # Assert
+    assert seen["type"] is np.ndarray
+
+
+@pytest.fixture
+def nested_decorator_result(list_input):
+    # Arrange
     def dummy_decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Set nested context
             wrapper._current_decorator = "dummy_decorator"
             return func(*args, **kwargs)
 
         wrapper._is_wrapper = True
         return wrapper
 
-    # Apply both decorators (nested)
-    @numpy_fn
-    @dummy_decorator
-    def nested_function(arr):
-        # In nested mode, the type should pass through unchanged from dummy_decorator
-        assert not isinstance(arr, np.ndarray)
-        return arr
+    import scitex_decorators._numpy_fn as numpy_fn_module
 
-    with patch("scitex_decorators._numpy_fn.is_nested_decorator", return_value=True):
-        # Input list should stay as list due to nested context
-        result = nested_function(test_data["list"])
-        assert isinstance(result, list)
-        assert result == test_data["list"]
+    _orig_is_nested = numpy_fn_module.is_nested_decorator
+    numpy_fn_module.is_nested_decorator = lambda: True
+    try:
+
+        @numpy_fn
+        @dummy_decorator
+        def nested_function(arr):
+            return arr
+
+        # Act
+        return nested_function(list_input)
+    finally:
+        numpy_fn_module.is_nested_decorator = _orig_is_nested
+
+
+def test_numpy_fn_nested_decorator_returns_list(nested_decorator_result):
+    # Arrange
+    expected_type = list
+    # Act
+    actual = nested_decorator_result
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_numpy_fn_nested_decorator_preserves_values(nested_decorator_result, list_input):
+    # Arrange
+    expected = list_input
+    # Act
+    actual = nested_decorator_result
+    # Assert
+    assert actual == expected
 
 
 if __name__ == "__main__":
@@ -129,111 +227,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_numpy_fn.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Timestamp: "2025-04-30 15:29:53 (ywatanabe)"
-# # File: /home/ywatanabe/proj/scitex_repo/src/scitex/decorators/_numpy_fn.py
-# # ----------------------------------------
-# import os
-#
-# __FILE__ = "./src/scitex/decorators/_numpy_fn.py"
-# __DIR__ = os.path.dirname(__FILE__)
-# # ----------------------------------------
-#
-# import numpy as np
-#
-# THIS_FILE = "/home/ywatanabe/proj/scitex_repo/src/scitex/decorators/_numpy_fn.py"
-#
-# from functools import wraps
-# from typing import Any as _Any
-# from typing import Callable
-#
-# from ._converters import _return_always, is_nested_decorator, to_numpy
-#
-#
-# def numpy_fn(func: Callable) -> Callable:
-#     @wraps(func)
-#     def wrapper(*args: _Any, **kwargs: _Any) -> _Any:
-#         # Skip conversion if already in a nested decorator context
-#         if is_nested_decorator():
-#             results = func(*args, **kwargs)
-#             return results
-#
-#         # Set the current decorator context
-#         wrapper._current_decorator = "numpy_fn"
-#
-#         # Store original object for type preservation
-#         original_object = args[0] if args else None
-#
-#         converted_args, converted_kwargs = to_numpy(
-#             *args, return_fn=_return_always, **kwargs
-#         )
-#
-#         # Skip strict assertion for certain types that may not convert to arrays
-#         # Instead, convert what we can and pass through what we can't
-#         validated_args = []
-#         for arg_index, arg in enumerate(converted_args):
-#             if isinstance(arg, np.ndarray):
-#                 validated_args.append(arg)
-#             elif isinstance(arg, (int, float, str, type(None))):
-#                 # Pass through scalars and strings unchanged
-#                 validated_args.append(arg)
-#             elif isinstance(arg, list) and all(
-#                 isinstance(item, np.ndarray) for item in arg
-#             ):
-#                 # List of arrays - pass through as is
-#                 validated_args.append(arg)
-#             else:
-#                 # Try one more conversion attempt
-#                 try:
-#                     validated_args.append(np.array(arg))
-#                 except:
-#                     # If all else fails, pass through unchanged
-#                     validated_args.append(arg)
-#
-#         results = func(*validated_args, **converted_kwargs)
-#
-#         # Convert results back to original input types
-#         if isinstance(results, np.ndarray):
-#             if original_object is not None:
-#                 if isinstance(original_object, list):
-#                     return results.tolist()
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "Tensor"
-#                 ):
-#                     import torch
-#
-#                     return torch.tensor(results)
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "DataFrame"
-#                 ):
-#                     import pandas as pd
-#
-#                     return pd.DataFrame(results)
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "Series"
-#                 ):
-#                     import pandas as pd
-#
-#                     return pd.Series(results)
-#             return results
-#
-#         return results
-#
-#     # Mark as a wrapper for detection
-#     wrapper._is_wrapper = True
-#     wrapper._decorator_type = "numpy_fn"
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_numpy_fn.py
-# --------------------------------------------------------------------------------
+# EOF

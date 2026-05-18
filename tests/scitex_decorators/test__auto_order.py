@@ -25,188 +25,350 @@ from scitex_decorators import (
 )
 
 
+# --------------------------------------------------------------------------- #
+# Fixtures
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def _autoorder_off():
+    """Provide a clean baseline with auto-ordering disabled before and after
+    each test that uses it."""
+    disable_auto_order()
+    yield
+    disable_auto_order()
+
+
+@pytest.fixture
+def _autoorder_on():
+    """Enable auto-ordering for the duration of the test, then restore the
+    standard decorators afterwards."""
+    disable_auto_order()
+    enable_auto_order()
+    yield
+    disable_auto_order()
+
+
+@pytest.fixture
+def _torch_batch_mean_results(_autoorder_on):
+    """Run the same ``x.mean()`` function once with ``@batch_fn @ torch_fn``
+    and once with the swapped order, returning ``(result1, result2)``."""
+
+    @scitex_decorators.batch_fn
+    @scitex_decorators.torch_fn
+    def func1(x):
+        return x.mean()
+
+    @scitex_decorators.torch_fn
+    @scitex_decorators.batch_fn
+    def func2(x):
+        return x.mean()
+
+    data = np.random.randn(10, 5)
+    return func1(data), func2(data)
+
+
+@pytest.fixture
+def _counting_func_first_call(_autoorder_on):
+    """Build an ``@batch_fn @ torch_fn`` function and invoke it once; expose
+    the function object so tests can inspect its post-call attributes."""
+
+    @scitex_decorators.batch_fn
+    @scitex_decorators.torch_fn
+    def counting_func(x):
+        return x.sum()
+
+    counting_func(np.array([1, 2, 3]))
+    return counting_func
+
+
+@pytest.fixture
+def _documented_func(_autoorder_on):
+    """Build a docstring-bearing function under auto-ordering so the metadata
+    can be inspected without re-doing the decoration in each test."""
+
+    @scitex_decorators.batch_fn
+    @scitex_decorators.torch_fn
+    def documented_func(x):
+        """This is a documented function"""
+        return x * 2
+
+    return documented_func
+
+
+# --------------------------------------------------------------------------- #
+# TestAutoOrder — Enabling, disabling, ordering, metadata
+# --------------------------------------------------------------------------- #
 class TestAutoOrder:
     """Test auto-ordering functionality"""
 
-    def setup_method(self):
-        """Reset to original decorators before each test"""
-        disable_auto_order()
-
-    def teardown_method(self):
-        """Reset to original decorators after each test"""
-        disable_auto_order()
-
-    def test_enable_disable(self):
-        """Test enable and disable functionality"""
-        # Enable auto-ordering
+    def test_enable_auto_order_replaces_torch_fn_with_decorator_class(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()``, the module-level ``torch_fn`` must
+        be an instance of ``AutoOrderDecorator``."""
+        # Arrange
+        # Act
         enable_auto_order()
+        # Assert
+        assert (
+            scitex_decorators.torch_fn.__class__.__name__
+            == "AutoOrderDecorator"
+        )
 
-        # Check that decorators were replaced
-        assert scitex_decorators.torch_fn.__class__.__name__ == "AutoOrderDecorator"
-        assert scitex_decorators.numpy_fn.__class__.__name__ == "AutoOrderDecorator"
-        assert scitex_decorators.pandas_fn.__class__.__name__ == "AutoOrderDecorator"
-        assert scitex_decorators.batch_fn.__class__.__name__ == "AutoOrderDecorator"
+    def test_enable_auto_order_replaces_numpy_fn_with_decorator_class(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()``, the module-level ``numpy_fn`` must
+        be an instance of ``AutoOrderDecorator``."""
+        # Arrange
+        # Act
+        enable_auto_order()
+        # Assert
+        assert (
+            scitex_decorators.numpy_fn.__class__.__name__
+            == "AutoOrderDecorator"
+        )
 
-        # Disable auto-ordering
+    def test_enable_auto_order_replaces_pandas_fn_with_decorator_class(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()``, the module-level ``pandas_fn`` must
+        be an instance of ``AutoOrderDecorator``."""
+        # Arrange
+        # Act
+        enable_auto_order()
+        # Assert
+        assert (
+            scitex_decorators.pandas_fn.__class__.__name__
+            == "AutoOrderDecorator"
+        )
+
+    def test_enable_auto_order_replaces_batch_fn_with_decorator_class(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()``, the module-level ``batch_fn`` must
+        be an instance of ``AutoOrderDecorator``."""
+        # Arrange
+        # Act
+        enable_auto_order()
+        # Assert
+        assert (
+            scitex_decorators.batch_fn.__class__.__name__
+            == "AutoOrderDecorator"
+        )
+
+    def test_disable_auto_order_restores_original_torch_fn(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
+        the module's ``torch_fn`` must be the original function-named one."""
+        # Arrange
+        enable_auto_order()
+        # Act
         disable_auto_order()
-
-        # Check that original decorators were restored
+        # Assert
         assert scitex_decorators.torch_fn.__name__ == "torch_fn"
+
+    def test_disable_auto_order_restores_original_numpy_fn(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
+        the module's ``numpy_fn`` must be the original function-named one."""
+        # Arrange
+        enable_auto_order()
+        # Act
+        disable_auto_order()
+        # Assert
         assert scitex_decorators.numpy_fn.__name__ == "numpy_fn"
+
+    def test_disable_auto_order_restores_original_pandas_fn(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
+        the module's ``pandas_fn`` must be the original function-named one."""
+        # Arrange
+        enable_auto_order()
+        # Act
+        disable_auto_order()
+        # Assert
         assert scitex_decorators.pandas_fn.__name__ == "pandas_fn"
+
+    def test_disable_auto_order_restores_original_batch_fn(
+        self, _autoorder_off
+    ):
+        """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
+        the module's ``batch_fn`` must be the original function-named one."""
+        # Arrange
+        enable_auto_order()
+        # Act
+        disable_auto_order()
+        # Assert
         assert scitex_decorators.batch_fn.__name__ == "batch_fn"
 
-    def test_auto_ordering_torch_batch(self):
-        """Test that decorators are applied in correct order regardless of how written"""
-        enable_auto_order()
+    def test_auto_ordering_makes_torch_batch_order_irrelevant(
+        self, _torch_batch_mean_results
+    ):
+        """With auto-ordering, computing ``x.mean()`` under
+        ``@batch_fn @ torch_fn`` and ``@torch_fn @ batch_fn`` must yield the
+        same numerical result."""
+        # Arrange
+        result1, result2 = _torch_batch_mean_results
+        # Act
+        equal = np.allclose(result1, result2)
+        # Assert
+        assert equal
 
-        # Must use scitex_decorators.* after enable_auto_order() to get auto-ordering versions
-        # Define functions with different decorator orders
-        @scitex_decorators.batch_fn
-        @scitex_decorators.torch_fn
-        def func1(x):
-            return x.mean()
-
-        @scitex_decorators.torch_fn
-        @scitex_decorators.batch_fn
-        def func2(x):
-            return x.mean()
-
-        # Both should work identically
-        data = np.random.randn(10, 5)
-        result1 = func1(data)
-        result2 = func2(data)
-
-        # Results should be the same (both are numpy arrays due to input type)
-        np.testing.assert_allclose(result1, result2)
-
-    def test_multiple_type_converters(self):
-        """Test handling of multiple type converters"""
-        enable_auto_order()
-
+    def test_auto_ordering_handles_multiple_type_converters_on_torch_input(
+        self, _autoorder_on
+    ):
+        """Stacking ``@batch_fn @ numpy_fn @ torch_fn`` on a torch input must
+        return a numeric-compatible result, not raise."""
+        # Arrange
         @scitex_decorators.batch_fn
         @scitex_decorators.numpy_fn
         @scitex_decorators.torch_fn
         def func(x):
-            # Should work with torch tensor input
             return x.mean()
 
-        # Test with torch tensor
         data = torch.randn(10, 5)
+        # Act
         result = func(data)
-        # With auto-ordering, the decorators are reordered, but the output type
-        # depends on the input type. Since input is torch, output is torch
+        # Assert
         assert isinstance(result, (torch.Tensor, np.ndarray, np.floating, float))
 
-    def test_complex_decorator_stacking(self):
-        """Test complex decorator stacking scenarios"""
-        enable_auto_order()
-
+    def test_auto_ordering_supports_complex_pandas_torch_stacking(
+        self, _autoorder_on
+    ):
+        """Stacking ``@pandas_fn @ torch_fn`` on numpy input must return a
+        ``pd.Series`` once auto-ordering reorders the converters."""
+        # Arrange
         @scitex_decorators.pandas_fn
         @scitex_decorators.torch_fn
         def complex_func(x):
-            # This would normally be problematic, but auto-ordering handles it
-            # Need to handle CUDA tensor
             if isinstance(x, torch.Tensor) and x.is_cuda:
                 x = x.cpu()
             return pd.Series(x.flatten())
 
-        # Test with numpy data to avoid CUDA issues
-        data = np.random.randn(8, 5)  # 8 divides evenly into batches
+        data = np.random.randn(8, 5)
+        # Act
         result = complex_func(data)
+        # Assert
         assert isinstance(result, pd.Series)
 
-    def test_delayed_application(self):
-        """Test that decorators are applied lazily on first call"""
-        enable_auto_order()
+    def test_auto_ordering_clears_pending_decorators_after_first_call(
+        self, _counting_func_first_call
+    ):
+        """The ``_pending_decorators`` attribute is consumed on the first
+        invocation and must not be present afterwards."""
+        # Arrange
+        counting_func = _counting_func_first_call
+        # Act
+        has_pending = hasattr(counting_func, "_pending_decorators")
+        # Assert
+        assert not has_pending
 
-        call_count = 0
+    def test_auto_ordering_installs_final_func_after_first_call(
+        self, _counting_func_first_call
+    ):
+        """After the first invocation, the AutoOrderDecorator must cache the
+        composed pipeline as ``_final_func`` on the wrapper."""
+        # Arrange
+        counting_func = _counting_func_first_call
+        # Act
+        has_final = hasattr(counting_func, "_final_func")
+        # Assert
+        assert has_final
 
-        # Must use scitex_decorators.* after enable_auto_order() for auto-ordering
-        @scitex_decorators.batch_fn
-        @scitex_decorators.torch_fn
-        def counting_func(x):
-            nonlocal call_count
-            call_count += 1
-            return x.sum()
+    def test_auto_ordering_preserves_function_docstring(self, _documented_func):
+        """``@functools.wraps``-style metadata must be preserved: the wrapped
+        function's ``__doc__`` survives the decorator stack."""
+        # Arrange
+        documented_func = _documented_func
+        # Act
+        doc = documented_func.__doc__
+        # Assert
+        assert doc == "This is a documented function"
 
-        # Function should have pending decorators (from AutoOrderDecorator)
-        assert hasattr(counting_func, "_pending_decorators")
-
-        # First call applies decorators
-        data = np.array([1, 2, 3])
-        result = counting_func(data)
-
-        # After first call, pending decorators should be gone
-        assert not hasattr(counting_func, "_pending_decorators")
-        assert hasattr(counting_func, "_final_func")
-
-    def test_preserves_function_metadata(self):
-        """Test that function metadata is preserved"""
-        enable_auto_order()
-
-        @scitex_decorators.batch_fn
-        @scitex_decorators.torch_fn
-        def documented_func(x):
-            """This is a documented function"""
-            return x * 2
-
-        assert documented_func.__doc__ == "This is a documented function"
-        assert documented_func.__name__ == "documented_func"
+    def test_auto_ordering_preserves_function_name(self, _documented_func):
+        """``@functools.wraps``-style metadata must be preserved: the wrapped
+        function's ``__name__`` survives the decorator stack."""
+        # Arrange
+        documented_func = _documented_func
+        # Act
+        name = documented_func.__name__
+        # Assert
+        assert name == "documented_func"
 
 
+# --------------------------------------------------------------------------- #
+# TestAutoOrderIntegration — Real-world usage scenarios
+# --------------------------------------------------------------------------- #
 class TestAutoOrderIntegration:
     """Test auto-ordering with real use cases"""
 
-    def setup_method(self):
-        """Enable auto-ordering for integration tests"""
-        enable_auto_order()
-
-    def teardown_method(self):
-        """Disable after tests"""
-        disable_auto_order()
-
-    def test_stats_describe_with_auto_order(self):
-        """Test that stats.describe works with auto-ordering"""
+    def test_stats_describe_returns_expected_first_output_shape(
+        self, _autoorder_on
+    ):
+        """``scitex.stats.describe`` invoked under auto-ordering on a
+        4-D tensor with ``dim=(1,2,3)`` returns a stats array of shape
+        ``(87, 7)``."""
+        # Arrange
         from scitex.stats import describe
 
-        # Test case with multi-dimensional tensor
         features_pac_z = np.random.randn(87, 5, 50, 30)
         tensor_input = torch.tensor(features_pac_z)
-
-        # This should work without errors
+        # Act
         out = describe(tensor_input, dim=(1, 2, 3))
-
+        # Assert
         assert out[0].shape == (87, 7)
+
+    def test_stats_describe_returns_seven_stat_labels(self, _autoorder_on):
+        """``scitex.stats.describe`` invoked under auto-ordering returns a
+        labels list of length 7 (one per summarised statistic)."""
+        # Arrange
+        from scitex.stats import describe
+
+        features_pac_z = np.random.randn(87, 5, 50, 30)
+        tensor_input = torch.tensor(features_pac_z)
+        # Act
+        out = describe(tensor_input, dim=(1, 2, 3))
+        # Assert
         assert len(out[1]) == 7
 
-    def test_nested_lists_with_auto_order(self):
-        """Test nested list handling with auto-ordering"""
-
+    def test_torch_fn_under_auto_order_accepts_nested_python_lists(
+        self, _autoorder_on
+    ):
+        """Under auto-ordering, ``@torch_fn`` must accept nested Python lists
+        and return a result equal to ``np.array(nested).mean()``."""
+        # Arrange
         @scitex_decorators.torch_fn
         def process_nested(x):
             return x.mean()
 
-        # Nested lists should work
         nested_data = [[1, 2, 3], [4, 5, 6]]
-        result = process_nested(nested_data)
-
-        # Result will be numpy since input was a list
         expected = np.array(nested_data).mean()
-        np.testing.assert_allclose(result, expected)
+        # Act
+        result = process_nested(nested_data)
+        # Assert
+        assert np.allclose(result, expected)
 
-    def test_scalar_preservation_with_auto_order(self):
-        """Test that scalars are preserved with auto-ordering"""
-
+    def test_torch_fn_under_auto_order_preserves_scalar_kwargs_as_float(
+        self, _autoorder_on
+    ):
+        """Under auto-ordering, ``@torch_fn`` must forward scalar kwargs as
+        floats so the body's ``isinstance(scale, float)`` assertion holds
+        and the returned tensor equals ``data * scale``."""
+        # Arrange
         @scitex_decorators.torch_fn
         def scale_tensor(x, scale=2.5):
-            assert isinstance(scale, float)
+            if not isinstance(scale, float):
+                raise TypeError("scale must be a float")
             return x * scale
 
         data = torch.tensor([1, 2, 3])
-        result = scale_tensor(data, scale=3.0)
-
         expected = data * 3.0
+        # Act
+        result = scale_tensor(data, scale=3.0)
+        # Assert
         assert torch.allclose(result, expected)
 
 
@@ -217,182 +379,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_auto_order.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2025-06-01 10:30:00 (ywatanabe)"
-# # File: ./scitex_repo/src/scitex/decorators/_auto_order.py
-#
-# """
-# Auto-ordering decorator system that enforces predefined order regardless of
-# how decorators are written in code.
-#
-# The enforced order is:
-# 1. Type conversion (innermost): torch_fn, numpy_fn, pandas_fn
-# 2. Batch processing (outermost): batch_fn
-#
-# This uses a delayed application approach where decorators are collected
-# and then applied in the correct order when the function is first called.
-#
-# Example
-# -------
-# >>> from scitex_decorators import enable_auto_order
-# >>> enable_auto_order()
-# >>>
-# >>> # These will all work identically:
-# >>> @batch_fn
-# >>> @torch_fn
-# >>> def func1(x):
-# ...     return x.mean()
-# >>>
-# >>> @torch_fn
-# >>> @batch_fn  # Order doesn't matter!
-# >>> def func2(x):
-# ...     return x.mean()
-#
-# The auto-ordering system eliminates decorator ordering complexity and
-# prevents common errors from incorrect decorator stacking.
-# """
-#
-# from functools import wraps
-# from typing import Callable, List, Tuple, Any
-#
-# # Import original decorators
-# from ._torch_fn import torch_fn as _orig_torch_fn
-# from ._numpy_fn import numpy_fn as _orig_numpy_fn
-# from ._pandas_fn import pandas_fn as _orig_pandas_fn
-# from ._batch_fn import batch_fn as _orig_batch_fn
-#
-#
-# # Decorator priority (higher = inner/applied first)
-# DECORATOR_PRIORITY = {
-#     "torch_fn": 100,
-#     "numpy_fn": 100,
-#     "pandas_fn": 100,
-#     "batch_fn": 10,
-# }
-#
-# # Original decorator mapping
-# ORIGINAL_DECORATORS = {
-#     "torch_fn": _orig_torch_fn,
-#     "numpy_fn": _orig_numpy_fn,
-#     "pandas_fn": _orig_pandas_fn,
-#     "batch_fn": _orig_batch_fn,
-# }
-#
-#
-# class AutoOrderDecorator:
-#     """Decorator that collects and applies decorators in predefined order."""
-#
-#     def __init__(self, name: str):
-#         self.name = name
-#         self.priority = DECORATOR_PRIORITY[name]
-#         self.original = ORIGINAL_DECORATORS[name]
-#
-#     def __call__(self, func: Callable) -> Callable:
-#         # Initialize or get pending decorators list
-#         if not hasattr(func, "_pending_decorators"):
-#             # First decorator - create the wrapper
-#             original_func = func
-#
-#             @wraps(func)
-#             def auto_ordered_wrapper(*args, **kwargs):
-#                 # On first call, apply decorators in correct order
-#                 if hasattr(auto_ordered_wrapper, "_pending_decorators"):
-#                     # Sort by priority (descending = innermost first)
-#                     decorators = sorted(
-#                         auto_ordered_wrapper._pending_decorators,
-#                         key=lambda x: x[1],
-#                         reverse=True,
-#                     )
-#
-#                     # Apply decorators in order
-#                     final_func = original_func
-#                     for dec_name, _, dec_func in decorators:
-#                         final_func = dec_func(final_func)
-#
-#                     # Replace this wrapper with the final decorated function
-#                     auto_ordered_wrapper._final_func = final_func
-#                     delattr(auto_ordered_wrapper, "_pending_decorators")
-#
-#                 # Call the final decorated function
-#                 if hasattr(auto_ordered_wrapper, "_final_func"):
-#                     return auto_ordered_wrapper._final_func(*args, **kwargs)
-#                 else:
-#                     return original_func(*args, **kwargs)
-#
-#             auto_ordered_wrapper._pending_decorators = []
-#             func = auto_ordered_wrapper
-#
-#         # Add this decorator to pending list
-#         func._pending_decorators.append((self.name, self.priority, self.original))
-#
-#         return func
-#
-#
-# # Create auto-ordering versions
-# torch_fn = AutoOrderDecorator("torch_fn")
-# numpy_fn = AutoOrderDecorator("numpy_fn")
-# pandas_fn = AutoOrderDecorator("pandas_fn")
-# batch_fn = AutoOrderDecorator("batch_fn")
-#
-#
-# # Enable auto-ordering globally
-# def enable_auto_order():
-#     """
-#     Enable auto-ordering for all decorators in the scitex_decorators module.
-#
-#     This replaces the standard decorators with auto-ordering versions.
-#
-#     Example
-#     -------
-#     >>> import scitex
-#     >>> scitex_decorators.enable_auto_order()
-#     >>>
-#     >>> # Now decorators will auto-order regardless of how they're written
-#     >>> @scitex_decorators.batch_fn
-#     >>> @scitex_decorators.torch_fn
-#     >>> def my_func(x):
-#     ...     return x.mean()
-#     """
-#     import scitex_decorators as decorators_module
-#
-#     # Replace with auto-ordering versions
-#     decorators_module.torch_fn = torch_fn
-#     decorators_module.numpy_fn = numpy_fn
-#     decorators_module.pandas_fn = pandas_fn
-#     decorators_module.batch_fn = batch_fn
-#
-#     print("Auto-ordering enabled for scitex decorators!")
-#     print("Decorators will now apply in predefined order:")
-#     print("  1. Type conversion (torch_fn, numpy_fn, pandas_fn)")
-#     print("  2. Batch processing (batch_fn)")
-#
-#
-# def disable_auto_order():
-#     """Disable auto-ordering and restore original decorators."""
-#     import scitex_decorators as decorators_module
-#
-#     # Restore original decorators
-#     decorators_module.torch_fn = _orig_torch_fn
-#     decorators_module.numpy_fn = _orig_numpy_fn
-#     decorators_module.pandas_fn = _orig_pandas_fn
-#     decorators_module.batch_fn = _orig_batch_fn
-#
-#     print("Auto-ordering disabled. Using original decorators.")
-#
-#
-# __all__ = [
-#     "torch_fn",
-#     "numpy_fn",
-#     "pandas_fn",
-#     "batch_fn",
-#     "enable_auto_order",
-#     "disable_auto_order",
-# ]
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_auto_order.py
-# --------------------------------------------------------------------------------
+# EOF

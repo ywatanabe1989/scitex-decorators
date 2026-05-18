@@ -18,408 +18,169 @@ pytest.importorskip("tqdm")
 from scitex_decorators import wrap
 
 
-def test_wrap_preserves_function_metadata():
-    """Test that wrap preserves the original function's metadata."""
+@pytest.fixture
+def wrapped_sample_function():
+    """Provide a wrapped function with a known name, docstring, and signature."""
 
     @wrap
-    def test_function(xx: int) -> int:
+    def sample_function(xx: int) -> int:
         """Test docstring."""
         return xx + 1
 
-    # Check if the wrapper preserves the original function's name
-    assert test_function.__name__ == "test_function"
+    return sample_function
 
-    # Check if the wrapper preserves the original function's docstring
-    assert test_function.__doc__ == "Test docstring."
 
-    # Check if the wrapper preserves the original function's signature
-    signature = inspect.signature(test_function)
+def test_wrap_preserves_original_function_name(wrapped_sample_function):
+    """Wrap should preserve the original function's ``__name__``."""
+    # Arrange
+    fn = wrapped_sample_function
+    # Act
+    name = fn.__name__
+    # Assert
+    assert name == "sample_function"
+
+
+def test_wrap_preserves_original_function_docstring(wrapped_sample_function):
+    """Wrap should preserve the original function's ``__doc__``."""
+    # Arrange
+    fn = wrapped_sample_function
+    # Act
+    doc = fn.__doc__
+    # Assert
+    assert doc == "Test docstring."
+
+
+def test_wrap_preserves_original_function_signature(wrapped_sample_function):
+    """Wrap should preserve the original function's signature."""
+    # Arrange
+    fn = wrapped_sample_function
+    # Act
+    signature = inspect.signature(fn)
+    # Assert
     assert str(signature) == "(xx: int) -> int"
 
-    # Check if the wrapper preserves the original function's module
-    assert test_function.__module__ == __name__
+
+def test_wrap_preserves_original_function_module(wrapped_sample_function):
+    """Wrap should preserve the original function's ``__module__``."""
+    # Arrange
+    fn = wrapped_sample_function
+    # Act
+    module = fn.__module__
+    # Assert
+    assert module == __name__
 
 
-def test_wrap_functionality():
-    """Test that wrap doesn't modify the function's behavior."""
+@pytest.fixture
+def wrapped_add_one():
+    """Provide a wrapped single-argument function that increments its input."""
 
     @wrap
     def add_one(xx: int) -> int:
         return xx + 1
 
-    # Test with integer argument
-    assert add_one(1) == 2
-    assert add_one(0) == 1
-    assert add_one(-1) == 0
+    return add_one
 
-    # Test with different parameter names
+
+def test_wrap_call_returns_expected_positive_result(wrapped_add_one):
+    """Wrapped function returns the correct value for a positive input."""
+    # Arrange
+    fn = wrapped_add_one
+    # Act
+    result = fn(1)
+    # Assert
+    assert result == 2
+
+
+def test_wrap_call_returns_expected_zero_result(wrapped_add_one):
+    """Wrapped function returns the correct value for a zero input."""
+    # Arrange
+    fn = wrapped_add_one
+    # Act
+    result = fn(0)
+    # Assert
+    assert result == 1
+
+
+def test_wrap_call_returns_expected_negative_result(wrapped_add_one):
+    """Wrapped function returns the correct value for a negative input."""
+    # Arrange
+    fn = wrapped_add_one
+    # Act
+    result = fn(-1)
+    # Assert
+    assert result == 0
+
+
+@pytest.fixture
+def wrapped_multiply():
+    """Provide a wrapped two-argument multiplication function."""
+
     @wrap
     def multiply(aa: int, bb: int) -> int:
         return aa * bb
 
-    assert multiply(2, 3) == 6
-    assert multiply(aa=2, bb=3) == 6
-    assert multiply(2, bb=3) == 6
+    return multiply
 
 
-def test_wrap_manual_usage():
-    """Test using wrap as a function rather than a decorator."""
-
-    def subtract(xx: int, yy: int) -> int:
-        return xx - yy
-
-    wrapped_func = wrap(subtract)
-
-    assert wrapped_func(5, 3) == 2
-    assert wrapped_func(xx=10, yy=5) == 5
+def test_wrap_supports_positional_arguments_correctly(wrapped_multiply):
+    """Wrapped function works when both arguments are positional."""
+    # Arrange
+    fn = wrapped_multiply
+    # Act
+    result = fn(2, 3)
+    # Assert
+    assert result == 6
 
 
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
+def test_wrap_supports_keyword_arguments_correctly(wrapped_multiply):
+    """Wrapped function works when both arguments are passed by keyword."""
+    # Arrange
+    fn = wrapped_multiply
+    # Act
+    result = fn(aa=2, bb=3)
+    # Assert
+    assert result == 6
 
 
-def test_wrap_preserves_function_metadata():
-    """Test that wrap preserves the original function's metadata."""
-
-    @wrap
-    def test_function(xx: int) -> int:
-        """Test docstring."""
-        return xx + 1
-
-    # Check if the wrapper preserves the original function's name
-    assert test_function.__name__ == "test_function"
-
-    # Check if the wrapper preserves the original function's docstring
-    assert test_function.__doc__ == "Test docstring."
-
-    # Check if the wrapper preserves the original function's signature
-    signature = inspect.signature(test_function)
-    assert str(signature) == "(xx: int) -> int"
-
-    # Check if the wrapper preserves the original function's module
-    assert test_function.__module__ == __name__
+def test_wrap_supports_mixed_positional_keyword_arguments(wrapped_multiply):
+    """Wrapped function works with a mix of positional and keyword arguments."""
+    # Arrange
+    fn = wrapped_multiply
+    # Act
+    result = fn(2, bb=3)
+    # Assert
+    assert result == 6
 
 
-def test_wrap_functionality():
-    """Test that wrap doesn't modify the function's behavior."""
-
-    @wrap
-    def add_one(xx: int) -> int:
-        return xx + 1
-
-    # Test with integer argument
-    assert add_one(1) == 2
-    assert add_one(0) == 1
-    assert add_one(-1) == 0
-
-    # Test with different parameter names
-    @wrap
-    def multiply(aa: int, bb: int) -> int:
-        return aa * bb
-
-    assert multiply(2, 3) == 6
-    assert multiply(aa=2, bb=3) == 6
-    assert multiply(2, bb=3) == 6
-
-
-def test_wrap_manual_usage():
-    """Test using wrap as a function rather than a decorator."""
+@pytest.fixture
+def manually_wrapped_subtract():
+    """Provide a function manually wrapped via ``wrap(func)`` (non-decorator)."""
 
     def subtract(xx: int, yy: int) -> int:
         return xx - yy
 
-    wrapped_func = wrap(subtract)
-
-    assert wrapped_func(5, 3) == 2
-    assert wrapped_func(xx=10, yy=5) == 5
+    return wrap(subtract)
 
 
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-07 05:57:34 (ywatanabe)"
-#
-# import functools
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#
-#     Usage:
-#         @wrap
-#         def my_function(x):
-#             return x + 1
-#
-#         # Or manually:
-#         def my_function(x):
-#             return x + 1
-#         wrapped_func = wrap(my_function)
-#
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
+def test_wrap_manual_usage_positional_call(manually_wrapped_subtract):
+    """Manually wrapped function returns the correct value with positional args."""
+    # Arrange
+    fn = manually_wrapped_subtract
+    # Act
+    result = fn(5, 3)
+    # Assert
+    assert result == 2
 
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
+
+def test_wrap_manual_usage_keyword_call(manually_wrapped_subtract):
+    """Manually wrapped function returns the correct value with keyword args."""
+    # Arrange
+    fn = manually_wrapped_subtract
+    # Act
+    result = fn(xx=10, yy=5)
+    # Assert
+    assert result == 5
+
 
 if __name__ == "__main__":
     import os
@@ -428,49 +189,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_wrap.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Timestamp: "2025-05-01 09:16:13 (ywatanabe)"
-# # File: /home/ywatanabe/proj/scitex_repo/src/scitex/decorators/_wrap.py
-# # ----------------------------------------
-# import os
-#
-# __FILE__ = "./src/scitex/decorators/_wrap.py"
-# __DIR__ = os.path.dirname(__FILE__)
-# # ----------------------------------------
-#
-#
-# def wrap(func):
-#     """Basic function wrapper that preserves function metadata.
-#     Usage:
-#     @wrap
-#     def my_function(x):
-#         return x + 1
-#     # Or manually:
-#     def my_function(x):
-#         return x + 1
-#     wrapped_func = wrap(my_function)
-#     This wrapper is useful as a template for creating more complex decorators
-#     or when you want to ensure function metadata is preserved.
-#     """
-#     import functools
-#
-#     @functools.wraps(func)
-#     def wrapper(*args, **kwargs):
-#         return func(*args, **kwargs)
-#
-#     # Store reference to original function
-#     wrapper._original_func = func
-#     # Mark as a wrapper for detection
-#     wrapper._is_wrapper = True
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_wrap.py
-# --------------------------------------------------------------------------------
+# EOF

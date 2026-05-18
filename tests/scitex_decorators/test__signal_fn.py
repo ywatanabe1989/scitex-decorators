@@ -2,8 +2,6 @@
 # Timestamp: "2025-06-03 07:47:00 (ywatanabe)"
 # File: ./tests/scitex/decorators/test__signal_fn.py
 
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 
@@ -15,211 +13,373 @@ pd = pytest.importorskip("pandas")
 torch = pytest.importorskip("torch")
 xr = pytest.importorskip("xarray")
 
+from scitex_decorators import signal_fn
 
-def test_signal_fn_decorator_basic_functionality():
-    """Test basic functionality of signal_fn decorator."""
-    from scitex_decorators import signal_fn
 
+@pytest.fixture
+def basic_signal_result():
+    # Arrange
     @signal_fn
     def dummy_signal_function(signal, param=1.0):
-        """Dummy function that adds param to signal."""
         return signal + param
 
-    # Test with numpy array
     input_signal = np.array([1.0, 2.0, 3.0])
-    result = dummy_signal_function(input_signal, param=0.5)
-
-    assert isinstance(result, np.ndarray)
-    np.testing.assert_array_almost_equal(result, np.array([1.5, 2.5, 3.5]))
+    # Act
+    return dummy_signal_function(input_signal, param=0.5)
 
 
-def test_signal_fn_with_different_input_types():
-    """Test signal_fn decorator with different input types."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_basic_functionality_returns_ndarray(basic_signal_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = basic_signal_result
+    # Assert
+    assert isinstance(actual, expected_type)
 
+
+def test_signal_fn_basic_functionality_returns_correct_values(basic_signal_result):
+    # Arrange
+    expected = np.array([1.5, 2.5, 3.5])
+    # Act
+    actual = basic_signal_result
+    # Assert
+    assert np.allclose(actual, expected)
+
+
+@pytest.fixture
+def identity_decorated():
+    # Arrange
     @signal_fn
     def identity_function(signal):
-        """Return signal as-is."""
         return signal
 
-    # Test with list
+    # Act
+    return identity_function
+
+
+def test_signal_fn_with_list_input_returns_list(identity_decorated):
+    # Arrange
     input_list = [1.0, 2.0, 3.0]
-    result = identity_function(input_list)
+    # Act
+    result = identity_decorated(input_list)
+    # Assert
     assert isinstance(result, list)
+
+
+def test_signal_fn_with_list_input_preserves_values(identity_decorated):
+    # Arrange
+    input_list = [1.0, 2.0, 3.0]
+    # Act
+    result = identity_decorated(input_list)
+    # Assert
     assert result == input_list
 
-    # Test with numpy array
+
+def test_signal_fn_with_numpy_input_returns_ndarray(identity_decorated):
+    # Arrange
     input_array = np.array([1.0, 2.0, 3.0])
-    result = identity_function(input_array)
+    # Act
+    result = identity_decorated(input_array)
+    # Assert
     assert isinstance(result, np.ndarray)
-    np.testing.assert_array_equal(result, input_array)
 
-    # Test with pandas DataFrame
+
+def test_signal_fn_with_numpy_input_preserves_values(identity_decorated):
+    # Arrange
+    input_array = np.array([1.0, 2.0, 3.0])
+    # Act
+    result = identity_decorated(input_array)
+    # Assert
+    assert np.array_equal(result, input_array)
+
+
+def test_signal_fn_with_dataframe_input_returns_dataframe(identity_decorated):
+    # Arrange
     input_df = pd.DataFrame({"col1": [1.0, 2.0], "col2": [3.0, 4.0]})
-    result = identity_function(input_df)
+    # Act
+    result = identity_decorated(input_df)
+    # Assert
     assert isinstance(result, pd.DataFrame)
-    # Note: DataFrame conversion may change column structure, just check values
-    np.testing.assert_array_equal(result.values, input_df.values)
 
-    # Test with pandas Series
+
+def test_signal_fn_with_dataframe_input_preserves_values(identity_decorated):
+    # Arrange
+    input_df = pd.DataFrame({"col1": [1.0, 2.0], "col2": [3.0, 4.0]})
+    # Act
+    result = identity_decorated(input_df)
+    # Assert
+    assert np.array_equal(result.values, input_df.values)
+
+
+def test_signal_fn_with_series_input_returns_series(identity_decorated):
+    # Arrange
     input_series = pd.Series([1.0, 2.0, 3.0])
-    result = identity_function(input_series)
+    # Act
+    result = identity_decorated(input_series)
+    # Assert
     assert isinstance(result, pd.Series)
-    # Note: Series conversion may change dtype, just check values
-    np.testing.assert_array_equal(result.values, input_series.values)
 
 
-def test_signal_fn_with_xarray():
-    """Test signal_fn decorator with xarray DataArray."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_with_series_input_preserves_values(identity_decorated):
+    # Arrange
+    input_series = pd.Series([1.0, 2.0, 3.0])
+    # Act
+    result = identity_decorated(input_series)
+    # Assert
+    assert np.array_equal(result.values, input_series.values)
 
-    @signal_fn
-    def identity_function(signal):
-        """Return signal as-is."""
-        return signal
 
-    # Test with xarray DataArray
+def test_signal_fn_with_xarray_input_returns_dataarray(identity_decorated):
+    # Arrange
     input_xr = xr.DataArray([1.0, 2.0, 3.0], dims=["x"])
-    result = identity_function(input_xr)
+    # Act
+    result = identity_decorated(input_xr)
+    # Assert
     assert isinstance(result, xr.DataArray)
-    # Note: xarray conversion may change dimension names, just check values
-    np.testing.assert_array_equal(result.values, input_xr.values)
 
 
-def test_signal_fn_preserves_additional_arguments():
-    """Test that signal_fn only converts first argument, preserves others."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_with_xarray_input_preserves_values(identity_decorated):
+    # Arrange
+    input_xr = xr.DataArray([1.0, 2.0, 3.0], dims=["x"])
+    # Act
+    result = identity_decorated(input_xr)
+    # Assert
+    assert np.array_equal(result.values, input_xr.values)
+
+
+@pytest.fixture
+def params_signal_result():
+    # Arrange
+    captured = {}
 
     @signal_fn
     def signal_with_params(signal, fs, window_size):
-        """Function with signal and non-signal parameters."""
-        # Verify that fs and window_size are preserved as original types
-        assert isinstance(fs, (int, float))
-        assert isinstance(window_size, int)
+        captured["fs_type"] = type(fs)
+        captured["window_size_type"] = type(window_size)
         return signal * fs / window_size
 
     input_signal = np.array([1.0, 2.0, 3.0])
-    fs = 256.0  # sampling frequency
-    window_size = 128  # window size
-
-    result = signal_with_params(input_signal, fs, window_size)
-
-    assert isinstance(result, np.ndarray)
-    expected = input_signal * fs / window_size
-    np.testing.assert_array_almost_equal(result, expected)
+    # Act
+    result = signal_with_params(input_signal, 256.0, 128)
+    return {"result": result, "captured": captured, "input": input_signal}
 
 
-def test_signal_fn_tuple_return():
-    """Test signal_fn decorator with tuple return values."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_preserves_fs_argument_type(params_signal_result):
+    # Arrange
+    captured = params_signal_result["captured"]
+    # Act
+    fs_type = captured["fs_type"]
+    # Assert
+    assert fs_type is float
 
+
+def test_signal_fn_preserves_window_size_argument_type(params_signal_result):
+    # Arrange
+    captured = params_signal_result["captured"]
+    # Act
+    ws_type = captured["window_size_type"]
+    # Assert
+    assert ws_type is int
+
+
+def test_signal_fn_with_extra_args_returns_ndarray(params_signal_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = params_signal_result["result"]
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_signal_fn_with_extra_args_returns_correct_values(params_signal_result):
+    # Arrange
+    input_signal = params_signal_result["input"]
+    expected = input_signal * 256.0 / 128
+    # Act
+    actual = params_signal_result["result"]
+    # Assert
+    assert np.allclose(actual, expected)
+
+
+@pytest.fixture
+def tuple_return_result():
+    # Arrange
     @signal_fn
     def function_returning_tuple(signal):
-        """Function that returns tuple (signal, metadata)."""
-        # Return processed signal and some metadata
         processed_signal = signal * 2
         metadata = {"factor": 2.0}
         return processed_signal, metadata
 
     input_signal = np.array([1.0, 2.0, 3.0])
-    result_signal, result_metadata = function_returning_tuple(input_signal)
-
-    # Signal should be converted back to numpy
-    assert isinstance(result_signal, np.ndarray)
-    np.testing.assert_array_almost_equal(result_signal, np.array([2.0, 4.0, 6.0]))
-
-    # Metadata should remain unchanged
-    assert result_metadata == {"factor": 2.0}
+    # Act
+    return function_returning_tuple(input_signal)
 
 
-def test_signal_fn_with_empty_args():
-    """Test signal_fn decorator with empty arguments."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_tuple_return_signal_is_ndarray(tuple_return_result):
+    # Arrange
+    result_signal, _ = tuple_return_result
+    # Act
+    actual = result_signal
+    # Assert
+    assert isinstance(actual, np.ndarray)
 
+
+def test_signal_fn_tuple_return_signal_has_correct_values(tuple_return_result):
+    # Arrange
+    result_signal, _ = tuple_return_result
+    expected = np.array([2.0, 4.0, 6.0])
+    # Act
+    actual = result_signal
+    # Assert
+    assert np.allclose(actual, expected)
+
+
+def test_signal_fn_tuple_return_metadata_unchanged(tuple_return_result):
+    # Arrange
+    _, result_metadata = tuple_return_result
+    expected = {"factor": 2.0}
+    # Act
+    actual = result_metadata
+    # Assert
+    assert actual == expected
+
+
+def test_signal_fn_with_empty_args_returns_tensor():
+    # Arrange
     @signal_fn
     def function_no_args():
-        """Function with no arguments."""
         return torch.tensor([1.0, 2.0, 3.0])
 
+    # Act
     result = function_no_args()
-    # Should return torch tensor since no original object to convert back to
+    # Assert
     assert isinstance(result, torch.Tensor)
 
 
-def test_signal_fn_nested_decorator_detection():
-    """Test signal_fn decorator nested decorator detection."""
-    from scitex_decorators import signal_fn
+@pytest.fixture
+def nested_decorator_result():
+    # Arrange
+    import scitex_decorators._signal_fn as signal_fn_module
 
-    # Mock nested decorator context
-    with patch("scitex_decorators._signal_fn.is_nested_decorator", return_value=True):
+    _orig_is_nested = signal_fn_module.is_nested_decorator
+    signal_fn_module.is_nested_decorator = lambda: True
+    try:
 
         @signal_fn
         def nested_function(signal):
             return signal
 
         input_signal = np.array([1.0, 2.0, 3.0])
+        # Act
         result = nested_function(input_signal)
+        return {"result": result, "input": input_signal}
+    finally:
+        signal_fn_module.is_nested_decorator = _orig_is_nested
 
-        # Should bypass conversion when nested
-        assert result is input_signal
+
+def test_signal_fn_nested_decorator_bypasses_conversion(nested_decorator_result):
+    # Arrange
+    input_signal = nested_decorator_result["input"]
+    # Act
+    result = nested_decorator_result["result"]
+    # Assert
+    assert result is input_signal
 
 
-def test_signal_fn_decorator_attributes():
-    """Test that signal_fn decorator sets proper attributes."""
-    from scitex_decorators import signal_fn
-
+def test_signal_fn_decorator_sets_is_wrapper_attribute():
+    # Arrange
     @signal_fn
-    def test_function(signal):
+    def some_function(signal):
         return signal
 
-    # Check decorator attributes
-    assert hasattr(test_function, "_is_wrapper")
-    assert test_function._is_wrapper is True
-    assert hasattr(test_function, "_decorator_type")
-    assert test_function._decorator_type == "signal_fn"
+    # Act
+    actual = some_function._is_wrapper
+    # Assert
+    assert actual is True
 
 
-def test_signal_fn_with_kwargs():
-    """Test signal_fn decorator with keyword arguments."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_decorator_sets_decorator_type_attribute():
+    # Arrange
+    @signal_fn
+    def some_function(signal):
+        return signal
 
+    # Act
+    actual = some_function._decorator_type
+    # Assert
+    assert actual == "signal_fn"
+
+
+@pytest.fixture
+def kwargs_signal_result():
+    # Arrange
     @signal_fn
     def signal_with_kwargs(signal, scale=1.0, offset=0.0):
-        """Function with keyword arguments."""
         return signal * scale + offset
 
     input_signal = np.array([1.0, 2.0, 3.0])
+    # Act
     result = signal_with_kwargs(input_signal, scale=2.0, offset=1.0)
+    return {"result": result, "input": input_signal}
 
-    assert isinstance(result, np.ndarray)
+
+def test_signal_fn_with_kwargs_returns_ndarray(kwargs_signal_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = kwargs_signal_result["result"]
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_signal_fn_with_kwargs_returns_correct_values(kwargs_signal_result):
+    # Arrange
+    input_signal = kwargs_signal_result["input"]
     expected = input_signal * 2.0 + 1.0
-    np.testing.assert_array_almost_equal(result, expected)
+    # Act
+    actual = kwargs_signal_result["result"]
+    # Assert
+    assert np.allclose(actual, expected)
 
 
-def test_signal_fn_torch_tensor_input():
-    """Test signal_fn decorator with torch tensor input."""
-    from scitex_decorators import signal_fn
-
+@pytest.fixture
+def torch_identity_result():
+    # Arrange
     @signal_fn
     def torch_identity(signal):
-        """Return signal as-is."""
         return signal
 
     input_tensor = torch.tensor([1.0, 2.0, 3.0])
-    result = torch_identity(input_tensor)
+    # Act
+    return {
+        "result": torch_identity(input_tensor),
+        "input": input_tensor,
+    }
 
-    # Should remain as torch tensor since input was torch tensor
-    assert isinstance(result, torch.Tensor)
-    torch.testing.assert_close(result, input_tensor)
+
+def test_signal_fn_torch_tensor_input_returns_tensor(torch_identity_result):
+    # Arrange
+    expected_type = torch.Tensor
+    # Act
+    actual = torch_identity_result["result"]
+    # Assert
+    assert isinstance(actual, expected_type)
 
 
-def test_signal_fn_complex_processing():
-    """Test signal_fn decorator with more complex signal processing."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_torch_tensor_input_preserves_values(torch_identity_result):
+    # Arrange
+    input_tensor = torch_identity_result["input"]
+    # Act
+    actual = torch_identity_result["result"]
+    # Assert
+    assert torch.allclose(actual, input_tensor)
 
+
+@pytest.fixture
+def complex_processing_result():
+    # Arrange
     @signal_fn
     def complex_processing(signal, multiplier, add_noise=False):
-        """Complex processing function."""
         processed = signal * multiplier
         if add_noise:
             noise = torch.randn_like(processed) * 0.01
@@ -227,124 +387,179 @@ def test_signal_fn_complex_processing():
         return processed
 
     input_signal = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    # Act
     result = complex_processing(input_signal, multiplier=2.0, add_noise=False)
+    return {"result": result, "input": input_signal}
 
-    assert isinstance(result, np.ndarray)
+
+def test_signal_fn_complex_processing_returns_ndarray(complex_processing_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = complex_processing_result["result"]
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_signal_fn_complex_processing_returns_correct_values(complex_processing_result):
+    # Arrange
+    input_signal = complex_processing_result["input"]
     expected = input_signal * 2.0
-    np.testing.assert_array_almost_equal(result, expected)
+    # Act
+    actual = complex_processing_result["result"]
+    # Assert
+    assert np.allclose(actual, expected)
 
 
-def test_signal_fn_error_handling():
-    """Test signal_fn decorator error handling."""
-    from scitex_decorators import signal_fn
-
+def test_signal_fn_propagates_inner_function_error():
+    # Arrange
     @signal_fn
     def function_with_error(signal):
-        """Function that raises an error."""
         raise ValueError("Test error")
 
     input_signal = np.array([1.0, 2.0, 3.0])
-
-    # Error should propagate through decorator
-    with pytest.raises(ValueError, match="Test error"):
+    # Act
+    ctx = pytest.raises(ValueError, match="Test error")
+    # Assert
+    with ctx:
         function_with_error(input_signal)
 
 
-@patch("scitex_decorators._signal_fn.to_torch")
-def test_signal_fn_conversion_mocking(mock_to_torch):
-    """Test signal_fn decorator with mocked conversion functions."""
-    from scitex_decorators import signal_fn
-
-    # Mock the to_torch conversion
-    mock_tensor = torch.tensor([1.0, 2.0, 3.0])
-    mock_to_torch.return_value = [[mock_tensor]]
-
-    @signal_fn
-    def mock_function(signal):
-        return signal + 1
-
-    input_signal = np.array([1.0, 2.0, 3.0])
-    result = mock_function(input_signal)
-
-    # Verify to_torch was called
-    mock_to_torch.assert_called_once()
-
-    # Result should be converted back to numpy
-    assert isinstance(result, np.ndarray)
-
-
-def test_signal_fn_preserves_float64_dtype():
-    """Regression: float64 numpy input must round-trip as float64."""
-    from scitex_decorators import signal_fn
-
+@pytest.fixture
+def float64_passthrough_result():
+    # Arrange
     @signal_fn
     def passthrough(signal):
-        return signal  # already torch.Tensor inside the wrapper
+        return signal
 
     arr_in = np.random.randn(64).astype(np.float64)
-    arr_out = passthrough(arr_in)
-
-    assert isinstance(arr_out, np.ndarray)
-    assert arr_out.dtype == np.float64, (
-        f"Expected float64, got {arr_out.dtype} (silent downcast bug)"
-    )
+    # Act
+    return {"out": passthrough(arr_in), "input": arr_in}
 
 
-def test_signal_fn_preserves_float32_dtype():
-    """Regression: float32 numpy input stays float32."""
-    from scitex_decorators import signal_fn
+def test_signal_fn_float64_passthrough_returns_ndarray(float64_passthrough_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = float64_passthrough_result["out"]
+    # Assert
+    assert isinstance(actual, expected_type)
 
+
+def test_signal_fn_float64_passthrough_preserves_dtype(float64_passthrough_result):
+    # Arrange
+    expected_dtype = np.float64
+    # Act
+    actual_dtype = float64_passthrough_result["out"].dtype
+    # Assert
+    assert actual_dtype == expected_dtype
+
+
+@pytest.fixture
+def float32_passthrough_result():
+    # Arrange
     @signal_fn
     def passthrough(signal):
         return signal
 
     arr_in = np.random.randn(64).astype(np.float32)
-    arr_out = passthrough(arr_in)
+    # Act
+    return {"out": passthrough(arr_in), "input": arr_in}
 
-    assert isinstance(arr_out, np.ndarray)
+
+def test_signal_fn_float32_passthrough_returns_ndarray(float32_passthrough_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = float32_passthrough_result["out"]
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_signal_fn_float32_passthrough_preserves_dtype(float32_passthrough_result):
+    # Arrange
+    expected_dtype = np.float32
+    # Act
+    actual_dtype = float32_passthrough_result["out"].dtype
+    # Assert
+    assert actual_dtype == expected_dtype
+
+
+def test_signal_fn_preserves_float32_dtype_through_torch_op():
+    # Arrange
+    @signal_fn
+    def scale(signal):
+        return signal * 2.0
+
+    arr_in = np.random.randn(32).astype(np.float32)
+    # Act
+    arr_out = scale(arr_in)
+    # Assert
     assert arr_out.dtype == np.float32
 
 
-def test_signal_fn_preserves_dtype_through_torch_op():
-    """Regression: dtype is preserved even when the inner function performs
-    a torch op that would normally promote precision."""
-    from scitex_decorators import signal_fn
-
+def test_signal_fn_preserves_float64_dtype_through_torch_op():
+    # Arrange
     @signal_fn
     def scale(signal):
-        return signal * 2.0  # torch op that may promote dtype
+        return signal * 2.0
 
-    for np_dtype in (np.float32, np.float64):
-        arr_in = np.random.randn(32).astype(np_dtype)
-        arr_out = scale(arr_in)
-        assert arr_out.dtype == np_dtype, f"Input {np_dtype} produced {arr_out.dtype}"
+    arr_in = np.random.randn(32).astype(np.float64)
+    # Act
+    arr_out = scale(arr_in)
+    # Assert
+    assert arr_out.dtype == np.float64
 
 
-def test_signal_fn_preserves_dtype_for_2d_batch():
-    """Regression: shape and dtype preserved for 2-D batched signals."""
-    from scitex_decorators import signal_fn
-
+@pytest.fixture
+def batched_passthrough_result():
+    # Arrange
     @signal_fn
     def passthrough(signal):
         return signal
 
     arr_in = np.random.randn(8, 128).astype(np.float64)
-    arr_out = passthrough(arr_in)
-
-    assert arr_out.shape == arr_in.shape
-    assert arr_out.dtype == np.float64
+    # Act
+    return {"out": passthrough(arr_in), "input": arr_in}
 
 
-def test_to_torch_preserves_float64_dtype():
-    """Direct converter regression: to_torch must preserve float64."""
+def test_signal_fn_2d_batch_preserves_shape(batched_passthrough_result):
+    # Arrange
+    input_shape = batched_passthrough_result["input"].shape
+    # Act
+    out_shape = batched_passthrough_result["out"].shape
+    # Assert
+    assert out_shape == input_shape
+
+
+def test_signal_fn_2d_batch_preserves_dtype(batched_passthrough_result):
+    # Arrange
+    expected_dtype = np.float64
+    # Act
+    actual_dtype = batched_passthrough_result["out"].dtype
+    # Assert
+    assert actual_dtype == expected_dtype
+
+
+def test_signal_fn_to_torch_preserves_float64_dtype_directly():
+    # Arrange
     from scitex_decorators._converters import _return_always, to_torch
 
     arr_in = np.random.randn(16).astype(np.float64)
+    # Act
     converted = to_torch(arr_in, return_fn=_return_always)[0][0]
+    # Assert
     assert converted.dtype == torch.float64
 
+
+def test_signal_fn_to_torch_preserves_float32_dtype_directly():
+    # Arrange
+    from scitex_decorators._converters import _return_always, to_torch
+
     arr_in32 = np.random.randn(16).astype(np.float32)
+    # Act
     converted32 = to_torch(arr_in32, return_fn=_return_always)[0][0]
+    # Assert
     assert converted32.dtype == torch.float32
 
 
@@ -355,121 +570,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_signal_fn.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Timestamp: "2025-05-31 (ywatanabe)"
-# # File: /home/ywatanabe/proj/scitex_repo/src/scitex/decorators/_signal_fn.py
-# # ----------------------------------------
-# import os
-#
-# __FILE__ = "./src/scitex/decorators/_signal_fn.py"
-# __DIR__ = os.path.dirname(__FILE__)
-# # ----------------------------------------
-#
-# from functools import wraps
-# from typing import Any as _Any
-# from typing import Callable
-#
-# import numpy as np
-#
-# from ._converters import _return_always, is_nested_decorator, to_torch
-#
-#
-# def signal_fn(func: Callable) -> Callable:
-#     """Decorator for signal processing functions that converts only the first argument (signal) to torch tensor.
-#
-#     This decorator is designed for DSP functions where:
-#     - The first argument is the signal data that should be converted to torch tensor
-#     - Other arguments (like sampling frequency, bands, etc.) should remain as-is
-#     """
-#
-#     @wraps(func)
-#     def wrapper(*args: _Any, **kwargs: _Any) -> _Any:
-#         # Skip conversion if already in a nested decorator context
-#         if is_nested_decorator():
-#             results = func(*args, **kwargs)
-#             return results
-#
-#         # Set the current decorator context
-#         wrapper._current_decorator = "signal_fn"
-#
-#         # Store original object for type preservation
-#         original_object = args[0] if args else None
-#
-#         # Convert only the first argument (signal) to torch tensor
-#         if args:
-#             # Convert first argument to torch
-#             converted_first_arg = to_torch(args[0], return_fn=_return_always)[0][0]
-#
-#             # Keep other arguments as-is
-#             converted_args = (converted_first_arg,) + args[1:]
-#         else:
-#             converted_args = args
-#
-#         results = func(*converted_args, **kwargs)
-#
-#         # Convert results back to original input types
-#         import torch
-#
-#         if isinstance(results, torch.Tensor):
-#             if original_object is not None:
-#                 if isinstance(original_object, list):
-#                     return results.detach().cpu().numpy().tolist()
-#                 elif isinstance(original_object, np.ndarray):
-#                     return results.detach().cpu().numpy()
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "DataFrame"
-#                 ):
-#                     import pandas as pd
-#
-#                     return pd.DataFrame(results.detach().cpu().numpy())
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "Series"
-#                 ):
-#                     import pandas as pd
-#
-#                     return pd.Series(results.detach().cpu().numpy().flatten())
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "DataArray"
-#                 ):
-#                     import xarray as xr
-#
-#                     return xr.DataArray(results.detach().cpu().numpy())
-#             return results
-#
-#         # Handle tuple returns (e.g., (signal, frequencies))
-#         elif isinstance(results, tuple):
-#             import torch
-#
-#             converted_results = []
-#             for r in results:
-#                 if isinstance(r, torch.Tensor):
-#                     if original_object is not None and isinstance(
-#                         original_object, np.ndarray
-#                     ):
-#                         converted_results.append(r.detach().cpu().numpy())
-#                     else:
-#                         converted_results.append(r)
-#                 else:
-#                     converted_results.append(r)
-#             return tuple(converted_results)
-#
-#         return results
-#
-#     # Mark as a wrapper for detection
-#     wrapper._is_wrapper = True
-#     wrapper._decorator_type = "signal_fn"
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_signal_fn.py
-# --------------------------------------------------------------------------------
+# EOF

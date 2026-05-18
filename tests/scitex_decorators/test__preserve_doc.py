@@ -16,264 +16,75 @@ pytest.importorskip("tqdm")
 from scitex_decorators import preserve_doc
 
 
-def test_preserve_doc_preserves_name():
-    """Test that preserve_doc preserves the original function's name."""
-
+def test_preserve_doc_preserves_original_function_name():
+    """``preserve_doc`` should keep the original function's ``__name__``."""
+    # Arrange
     @preserve_doc
-    def test_function():
+    def sample_function():
         """Test docstring."""
         return True
+    # Act
+    name = sample_function.__name__
+    # Assert
+    assert name == "sample_function"
 
-    assert test_function.__name__ == "test_function"
 
-
-def test_preserve_doc_preserves_docstring():
-    """Test that preserve_doc preserves the original function's docstring."""
-
+def test_preserve_doc_preserves_original_function_docstring():
+    """``preserve_doc`` should keep the original function's ``__doc__``."""
+    # Arrange
     @preserve_doc
-    def test_function():
+    def sample_function():
         """This docstring should be preserved."""
         return True
+    # Act
+    doc = sample_function.__doc__
+    # Assert
+    assert doc == "This docstring should be preserved."
 
-    assert test_function.__doc__ == "This docstring should be preserved."
 
-
-def test_preserve_doc_preserves_functionality():
-    """Test that preserve_doc doesn't alter the function's behavior."""
+@pytest.fixture
+def preserved_add():
+    """Provide a ``preserve_doc``-wrapped two-argument addition function."""
 
     @preserve_doc
     def add(xx, yy):
         """Add two numbers."""
         return xx + yy
 
-    assert add(2, 3) == 5
-    assert add(-1, 1) == 0
+    return add
 
 
-def test_preserve_doc_with_empty_docstring():
-    """Test preserve_doc with a function that has no docstring."""
+def test_preserve_doc_call_returns_correct_positive_sum(preserved_add):
+    """Wrapped ``add`` returns the correct sum for positive inputs."""
+    # Arrange
+    fn = preserved_add
+    # Act
+    result = fn(2, 3)
+    # Assert
+    assert result == 5
 
+
+def test_preserve_doc_call_returns_correct_zero_sum(preserved_add):
+    """Wrapped ``add`` returns zero when summing inverse values."""
+    # Arrange
+    fn = preserved_add
+    # Act
+    result = fn(-1, 1)
+    # Assert
+    assert result == 0
+
+
+def test_preserve_doc_with_missing_docstring_returns_none():
+    """``preserve_doc`` leaves ``__doc__`` as ``None`` when source has no docstring."""
+    # Arrange
     @preserve_doc
     def no_docstring_function():
         pass
+    # Act
+    doc = no_docstring_function.__doc__
+    # Assert
+    assert doc is None
 
-    assert no_docstring_function.__doc__ is None
-
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-
-
-def test_preserve_doc_preserves_name():
-    """Test that preserve_doc preserves the original function's name."""
-
-    @preserve_doc
-    def test_function():
-        """Test docstring."""
-        return True
-
-    assert test_function.__name__ == "test_function"
-
-
-def test_preserve_doc_preserves_docstring():
-    """Test that preserve_doc preserves the original function's docstring."""
-
-    @preserve_doc
-    def test_function():
-        """This docstring should be preserved."""
-        return True
-
-    assert test_function.__doc__ == "This docstring should be preserved."
-
-
-def test_preserve_doc_preserves_functionality():
-    """Test that preserve_doc doesn't alter the function's behavior."""
-
-    @preserve_doc
-    def add(xx, yy):
-        """Add two numbers."""
-        return xx + yy
-
-    assert add(2, 3) == 5
-    assert add(-1, 1) == 0
-
-
-def test_preserve_doc_with_empty_docstring():
-    """Test preserve_doc with a function that has no docstring."""
-
-    @preserve_doc
-    def no_docstring_function():
-        pass
-
-    assert no_docstring_function.__doc__ is None
-
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-#
-# from functools import wraps
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import os
@@ -282,29 +93,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_preserve_doc.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-11-14 07:44:00 (ywatanabe)"
-# # File: ./scitex_repo/src/scitex/decorators/_preserve_doc.py
-#
-# from functools import wraps
-#
-#
-# def preserve_doc(loader_func):
-#     """Wrap the loader functions to preserve their docstrings"""
-#
-#     @wraps(loader_func)
-#     def wrapper(*args, **kwargs):
-#         return loader_func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_preserve_doc.py
-# --------------------------------------------------------------------------------
+# EOF

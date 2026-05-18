@@ -28,6 +28,11 @@ CROSS_PACKAGE_IMPORTS = [
 
 
 @pytest.mark.parametrize("module_name", CROSS_PACKAGE_IMPORTS)
-def test_cross_package_import(module_name):
+def test_cross_package_import_resolves_module(module_name):
     """Importing scitex-decorators's declared cross-package dependency must succeed."""
-    pytest.importorskip(module_name)
+    # Arrange
+    name = module_name
+    # Act
+    mod = pytest.importorskip(name)
+    # Assert
+    assert mod.__name__ == name or mod.__name__.startswith(name.split('.')[0])

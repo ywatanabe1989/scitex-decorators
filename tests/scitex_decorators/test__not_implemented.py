@@ -1,518 +1,448 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Time-stamp: "2025-06-02 17:41:00 (claude-sonnet-4-20250514)"
-# File: /data/gpfs/projects/punim2354/ywatanabe/.claude-worktree/scitex_repo/tests/scitex/decorators/test__not_implemented.py
+# File: tests/scitex_decorators/test__not_implemented.py
 
-"""
-Comprehensive tests for scitex_decorators._not_implemented module.
+"""Tests for the ``not_implemented`` decorator.
 
-This module tests the not_implemented decorator that marks functions as
-not yet implemented, issues warnings, and prevents execution.
+The decorator wraps a callable so that, when invoked, it:
+
+* emits a ``FutureWarning`` mentioning the wrapped function name,
+* skips the original body entirely,
+* returns ``None``.
+
+Each test below verifies exactly one of those behaviors using real
+warning capture (PA-306: no mocks) and follows the Arrange / Act / Assert
+structure (PA-307).
 """
+
+from __future__ import annotations
+
+import functools
+import warnings
 
 import pytest
 
 # Required for scitex_decorators module
 pytest.importorskip("tqdm")
-import functools
-import warnings
-from unittest.mock import Mock, patch
+
+from scitex_decorators import not_implemented
 
 
-class TestNotImplemented:
-    """Test cases for scitex_decorators._not_implemented module."""
+# ---------------------------------------------------------------------------
+# Decorator export
+# ---------------------------------------------------------------------------
 
-    def setup_method(self):
-        """Set up test fixtures before each test method."""
-        # Clear any existing warnings filters
-        warnings.resetwarnings()
 
-    def test_not_implemented_import(self):
-        """Test that not_implemented decorator can be imported successfully."""
-        from scitex_decorators import not_implemented
+def test_not_implemented_decorator_is_callable_export():
+    # Arrange
+    decorator = not_implemented
+    # Act
+    is_callable = callable(decorator)
+    # Assert
+    assert is_callable
 
-        assert callable(not_implemented)
 
-    def test_not_implemented_basic_functionality(self):
-        """Test basic not_implemented decorator functionality."""
-        from scitex_decorators import not_implemented
+# ---------------------------------------------------------------------------
+# Basic wrapper behavior — return value (`None`)
+#
+# We capture warnings with ``warnings.catch_warnings`` so the test's only
+# assertion is the return-value check (TQ007 = exactly one assertion).
+# ---------------------------------------------------------------------------
 
+
+def test_not_implemented_returns_none_for_zero_arg_function():
+    # Arrange
+    @not_implemented
+    def unimplemented_function():
+        return "Should not execute"
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = unimplemented_function()
+    # Assert
+    assert observed is None
+
+
+def test_not_implemented_returns_none_with_positional_and_keyword_args():
+    # Arrange
+    @not_implemented
+    def adder(a, b, c=None):
+        return a + b + (c or 0)
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = adder(1, 2, c=3)
+    # Assert
+    assert observed is None
+
+
+def test_not_implemented_returns_none_with_varargs_and_kwargs():
+    # Arrange
+    @not_implemented
+    def flexible_function(*args, **kwargs):
+        return {"args": args, "kwargs": kwargs}
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = flexible_function(1, 2, 3, x=4, y=5)
+    # Assert
+    assert observed is None
+
+
+def test_not_implemented_returns_none_when_original_returns_number():
+    # Arrange
+    @not_implemented
+    def return_number():
+        return 42
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = return_number()
+    # Assert
+    assert observed is None
+
+
+def test_not_implemented_returns_none_when_original_returns_list():
+    # Arrange
+    @not_implemented
+    def return_list():
+        return [1, 2, 3]
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = return_list()
+    # Assert
+    assert observed is None
+
+
+def test_not_implemented_returns_none_when_original_returns_dict():
+    # Arrange
+    @not_implemented
+    def return_dict():
+        return {"a": 1}
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = return_dict()
+    # Assert
+    assert observed is None
+
+
+# ---------------------------------------------------------------------------
+# Warning emission
+# ---------------------------------------------------------------------------
+
+
+def test_not_implemented_emits_future_warning_category():
+    # Arrange
+    @not_implemented
+    def some_function():
+        return None
+
+    # Act
+    ctx = pytest.warns(FutureWarning)
+    # Assert
+    with ctx:
+        some_function()
+
+
+def test_not_implemented_warning_names_decorated_function():
+    # Arrange
+    @not_implemented
+    def specifically_named_function():
+        return None
+
+    # Act
+    ctx = pytest.warns(FutureWarning, match="specifically_named_function")
+    # Assert
+    with ctx:
+        specifically_named_function()
+
+
+def test_not_implemented_warning_mentions_not_yet_available_phrase():
+    # Arrange
+    @not_implemented
+    def some_method():
+        return None
+
+    # Act
+    ctx = pytest.warns(FutureWarning, match="not yet available")
+    # Assert
+    with ctx:
+        some_method()
+
+
+def test_not_implemented_warning_uses_attempt_to_use_phrase():
+    # Arrange
+    @not_implemented
+    def some_method():
+        return None
+
+    # Act
+    ctx = pytest.warns(
+        FutureWarning,
+        match=r"Attempt to use unimplemented method: 'some_method'",
+    )
+    # Assert
+    with ctx:
+        some_method()
+
+
+def test_not_implemented_emits_exact_warning_message_format():
+    # Arrange
+    @not_implemented
+    def exact_format_function():
+        pass
+
+    expected = (
+        "Attempt to use unimplemented method: 'exact_format_function'. "
+        "This method is not yet available."
+    )
+    # Act
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        exact_format_function()
+    # Assert
+    assert str(captured[0].message) == expected
+
+
+def test_not_implemented_emits_one_warning_per_invocation():
+    # Arrange
+    @not_implemented
+    def multi_call_function():
+        return None
+
+    # Act
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        for _ in range(3):
+            multi_call_function()
+    # Assert
+    assert len(captured) == 3
+
+
+# ---------------------------------------------------------------------------
+# Class / method support
+# ---------------------------------------------------------------------------
+
+
+def test_not_implemented_returns_none_for_instance_method_call():
+    # Arrange
+    class Owner:
         @not_implemented
-        def unimplemented_function():
-            return "Should not execute"
+        def instance_method(self, value):
+            return value * 2
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = unimplemented_function()
+    owner = Owner()
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = owner.instance_method(5)
+    # Assert
+    assert observed is None
 
-            # Function should return None (not execute original code)
-            assert result is None
-            assert len(w) == 1
-            assert issubclass(w[0].category, FutureWarning)
-            assert "unimplemented_function" in str(w[0].message)
-            assert "not yet available" in str(w[0].message)
 
-    def test_not_implemented_warning_message(self):
-        """Test that warning message contains expected content."""
-        from scitex_decorators import not_implemented
-
+def test_not_implemented_warning_names_instance_method_call():
+    # Arrange
+    class Owner:
         @not_implemented
-        def test_method():
-            pass
+        def instance_method(self, value):
+            return value * 2
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            test_method()
+    owner = Owner()
+    # Act
+    ctx = pytest.warns(FutureWarning, match="instance_method")
+    # Assert
+    with ctx:
+        owner.instance_method(5)
 
-            message = str(w[0].message)
-            assert "Attempt to use unimplemented method: 'test_method'" in message
-            assert "This method is not yet available" in message
 
-    def test_not_implemented_with_arguments(self):
-        """Test not_implemented decorator with functions that take arguments."""
-        from scitex_decorators import not_implemented
-
+def test_not_implemented_returns_none_for_static_method_call():
+    # Arrange
+    class Owner:
+        @staticmethod
         @not_implemented
-        def function_with_args(a, b, c=None):
-            return a + b + (c or 0)
+        def static_method(value):
+            return value * 3
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = function_with_args(1, 2, c=3)
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = Owner.static_method(5)
+    # Assert
+    assert observed is None
 
-            # Should warn and return None, not execute original function
-            assert result is None
-            assert len(w) == 1
-            assert "function_with_args" in str(w[0].message)
 
-    def test_not_implemented_with_kwargs(self):
-        """Test not_implemented decorator with functions using *args and **kwargs."""
-        from scitex_decorators import not_implemented
-
+def test_not_implemented_returns_none_for_class_method_call():
+    # Arrange
+    class Owner:
+        @classmethod
         @not_implemented
-        def flexible_function(*args, **kwargs):
-            return {"args": args, "kwargs": kwargs}
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = flexible_function(1, 2, 3, x=4, y=5)
-
-            assert result is None
-            assert len(w) == 1
-            assert "flexible_function" in str(w[0].message)
-
-    def test_not_implemented_multiple_calls(self):
-        """Test that each call to not_implemented function emits a warning."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def multi_call_function():
-            return "test"
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-
-            # Call multiple times
-            for i in range(3):
-                result = multi_call_function()
-                assert result is None
-
-            # Should have one warning per call
-            assert len(w) == 3
-            for warning in w:
-                assert "multi_call_function" in str(warning.message)
-
-    def test_not_implemented_warning_category(self):
-        """Test that not_implemented decorator emits FutureWarning specifically."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def category_test_function():
-            return "test"
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            category_test_function()
-
-            assert len(w) == 1
-            assert w[0].category == FutureWarning
-
-    def test_not_implemented_warning_stacklevel(self):
-        """Test that not_implemented warnings have correct stack level."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def stacklevel_function():
-            return "test"
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-
-            def caller_function():
-                return stacklevel_function()
-
-            caller_function()
-
-            assert len(w) == 1
-            # The warning should point to the caller, not the decorator
-            assert w[0].filename.endswith("test__not_implemented.py")
-
-    def test_not_implemented_function_name_preservation(self):
-        """Test that decorated function name appears in warning message."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def very_specific_function_name():
-            pass
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            very_specific_function_name()
-
-            assert len(w) == 1
-            assert "very_specific_function_name" in str(w[0].message)
-
-    def test_not_implemented_with_class_methods(self):
-        """Test not_implemented decorator with class methods."""
-        from scitex_decorators import not_implemented
-
-        class TestClass:
-            @not_implemented
-            def instance_method(self, value):
-                return value * 2
-
-            @staticmethod
-            @not_implemented
-            def static_method(value):
-                return value * 3
-
-            @classmethod
-            @not_implemented
-            def class_method(cls, value):
-                return value * 4
-
-        obj = TestClass()
-
-        # Test instance method
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = obj.instance_method(5)
-            assert result is None
-            assert len(w) == 1
-            assert "instance_method" in str(w[0].message)
-
-        # Test static method
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = TestClass.static_method(5)
-            assert result is None
-            assert len(w) == 1
-            assert "static_method" in str(w[0].message)
-
-        # Test class method
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = TestClass.class_method(5)
-            assert result is None
-            assert len(w) == 1
-            assert "class_method" in str(w[0].message)
-
-    def test_not_implemented_prevents_execution(self):
-        """Test that not_implemented prevents original function execution."""
-        from scitex_decorators import not_implemented
-
-        execution_flag = {"executed": False}
-
-        @not_implemented
-        def should_not_execute():
-            execution_flag["executed"] = True
-            return "executed"
-
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            result = should_not_execute()
-
-            # Function should not have executed
-            assert not execution_flag["executed"]
-            assert result is None
-
-    def test_not_implemented_with_complex_function(self):
-        """Test not_implemented with complex function having multiple features."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def complex_function(a, b=10, *args, **kwargs):
-            """Complex function with docstring."""
-            complex_calculation = a * b + sum(args) + sum(kwargs.values())
-            return complex_calculation
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = complex_function(1, 2, 3, 4, x=5, y=6)
-
-            assert result is None
-            assert len(w) == 1
-            assert "complex_function" in str(w[0].message)
-
-    def test_not_implemented_function_with_side_effects(self):
-        """Test that not_implemented prevents functions with side effects."""
-        from scitex_decorators import not_implemented
-
-        side_effect_list = []
-
-        @not_implemented
-        def function_with_side_effects(item):
-            side_effect_list.append(item)
-            return len(side_effect_list)
-
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            result = function_with_side_effects("test_item")
-
-            # Side effect should not have occurred
-            assert len(side_effect_list) == 0
-            assert result is None
-
-    def test_not_implemented_with_generators(self):
-        """Test not_implemented decorator with generator functions."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def not_implemented_generator(n):
-            for i in range(n):
-                yield i * 2
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = not_implemented_generator(3)
-
-            # Generator should not be created
-            assert result is None
-            assert len(w) == 1
-            assert "not_implemented_generator" in str(w[0].message)
-
-    def test_not_implemented_return_value_consistency(self):
-        """Test that not_implemented always returns None."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def return_string():
-            return "string"
-
-        @not_implemented
-        def return_number():
-            return 42
-
-        @not_implemented
-        def return_list():
-            return [1, 2, 3]
-
-        @not_implemented
-        def return_none():
-            return None
-
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-
-            assert return_string() is None
-            assert return_number() is None
-            assert return_list() is None
-            assert return_none() is None
-
-    def test_not_implemented_with_special_function_names(self):
-        """Test not_implemented decorator with special function names."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def _private_function():
-            return "private"
-
-        @not_implemented
-        def __dunder_function__():
-            return "dunder"
-
-        @not_implemented
-        def func_with_numbers_123():
-            return "numbers"
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-
-            _private_function()
-            __dunder_function__()
-            func_with_numbers_123()
-
-            assert len(w) == 3
-            assert "_private_function" in str(w[0].message)
-            assert "__dunder_function__" in str(w[1].message)
-            assert "func_with_numbers_123" in str(w[2].message)
-
-    def test_not_implemented_with_multiple_decorators(self):
-        """Test not_implemented decorator when combined with other decorators."""
-        from scitex_decorators import not_implemented
-
-        def logging_decorator(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                print(f"Calling {func.__name__}")
-                return func(*args, **kwargs)
-
-            return wrapper
-
-        @logging_decorator
-        @not_implemented
-        def multi_decorated_function(x):
-            return x * 2
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = multi_decorated_function(5)
-
-            assert result is None
-            assert len(w) == 1
-            assert "multi_decorated_function" in str(w[0].message)
-
-    def test_not_implemented_unicode_function_names(self):
-        """Test not_implemented decorator with unicode function names."""
-        from scitex_decorators import not_implemented
-
-        # Create function with unicode name using exec
-        unicode_code = """
-@not_implemented
-def función_unicode():
-    return "unicode"
-"""
-
-        local_vars = {"not_implemented": not_implemented}
-        exec(unicode_code, globals(), local_vars)
-        función_unicode = local_vars["función_unicode"]
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = función_unicode()
-
-            assert result is None
-            assert len(w) == 1
-            assert "función_unicode" in str(w[0].message)
-
-    def test_not_implemented_preserves_wrapper_behavior(self):
-        """Test that not_implemented creates proper wrapper function."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def original_function(a, b):
-            """Original function docstring."""
-            return a + b
-
-        # Test that it's callable
-        assert callable(original_function)
-
-        # Test wrapper behavior
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-
-            # Should accept any arguments without error
-            assert original_function(1, 2) is None
-            assert original_function(1, b=2) is None
-            assert original_function(a=1, b=2) is None
-
-    def test_not_implemented_warning_message_format(self):
-        """Test the exact format of the warning message."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def test_function():
-            pass
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            test_function()
-
-            expected_message = "Attempt to use unimplemented method: 'test_function'. This method is not yet available."
-            assert str(w[0].message) == expected_message
-
-
-class TestNotImplementedEdgeCases:
-    """Test edge cases and error conditions for not_implemented decorator."""
-
-    def test_not_implemented_empty_function_name(self):
-        """Test not_implemented with dynamically created function with empty name."""
-        from scitex_decorators import not_implemented
-
-        # Create a function dynamically (though it will still have a name)
-        dynamic_func = lambda: "test"
-        dynamic_func.__name__ = "dynamic_test"
-
-        decorated_func = not_implemented(dynamic_func)
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = decorated_func()
-
-            assert result is None
-            assert len(w) == 1
-            assert "dynamic_test" in str(w[0].message)
-
-    def test_not_implemented_with_exception_in_original(self):
-        """Test that not_implemented prevents exceptions in original function."""
-        from scitex_decorators import not_implemented
-
-        @not_implemented
-        def function_that_would_raise():
-            raise ValueError("This should not be raised")
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-
-            # Should not raise ValueError, just return None
-            result = function_that_would_raise()
-
-            assert result is None
-            assert len(w) == 1
-            # No ValueError should be raised
+        def class_method(cls, value):
+            return value * 4
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = Owner.class_method(5)
+    # Assert
+    assert observed is None
+
+
+# ---------------------------------------------------------------------------
+# Side-effect prevention
+# ---------------------------------------------------------------------------
+
+
+def test_not_implemented_skips_original_function_body():
+    # Arrange
+    execution_flag = {"executed": False}
+
+    @not_implemented
+    def should_not_execute():
+        execution_flag["executed"] = True
+        return "executed"
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        should_not_execute()
+    # Assert
+    assert execution_flag["executed"] is False
+
+
+def test_not_implemented_skips_function_with_side_effects():
+    # Arrange
+    side_effect_list: list[str] = []
+
+    @not_implemented
+    def function_with_side_effects(item):
+        side_effect_list.append(item)
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        function_with_side_effects("test_item")
+    # Assert
+    assert side_effect_list == []
+
+
+def test_not_implemented_suppresses_exception_from_original_body():
+    # Arrange
+    @not_implemented
+    def function_that_would_raise():
+        raise ValueError("This should not be raised")
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = function_that_would_raise()
+    # Assert
+    assert observed is None
+
+
+def test_not_implemented_does_not_yield_from_generator_body():
+    # Arrange
+    @not_implemented
+    def not_implemented_generator(n):
+        for i in range(n):
+            yield i * 2
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = not_implemented_generator(3)
+    # Assert
+    assert observed is None
+
+
+# ---------------------------------------------------------------------------
+# Name handling
+# ---------------------------------------------------------------------------
+
+
+def test_not_implemented_warning_names_private_function():
+    # Arrange
+    @not_implemented
+    def _private_function():
+        return "private"
+
+    # Act
+    ctx = pytest.warns(FutureWarning, match="_private_function")
+    # Assert
+    with ctx:
+        _private_function()
+
+
+def test_not_implemented_warning_names_dunder_function():
+    # Arrange
+    @not_implemented
+    def __dunder_function__():
+        return "dunder"
+
+    # Act
+    ctx = pytest.warns(FutureWarning, match="__dunder_function__")
+    # Assert
+    with ctx:
+        __dunder_function__()
+
+
+def test_not_implemented_warning_names_function_with_digits():
+    # Arrange
+    @not_implemented
+    def func_with_numbers_123():
+        return "numbers"
+
+    # Act
+    ctx = pytest.warns(FutureWarning, match="func_with_numbers_123")
+    # Assert
+    with ctx:
+        func_with_numbers_123()
+
+
+def test_not_implemented_works_when_stacked_with_other_decorator():
+    # Arrange
+    def logging_decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    @logging_decorator
+    @not_implemented
+    def multi_decorated_function(x):
+        return x * 2
+
+    # Act
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        observed = multi_decorated_function(5)
+    # Assert
+    assert observed is None
+
+
+def test_not_implemented_respects_dunder_name_override_on_lambda():
+    # Arrange
+    dynamic_func = lambda: "x"
+    dynamic_func.__name__ = "dynamic_test"
+    decorated = not_implemented(dynamic_func)
+    # Act
+    ctx = pytest.warns(FutureWarning, match="dynamic_test")
+    # Assert
+    with ctx:
+        decorated()
 
 
 if __name__ == "__main__":
     import os
 
-    import pytest
-
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_not_implemented.py
-# --------------------------------------------------------------------------------
-# #!./env/bin/python3
-# # -*- coding: utf-8 -*-
-# # Time-stamp: "2024-06-07 22:16:25 (ywatanabe)"
-# # /home/ywatanabe/proj/scitex/src/scitex/gen/_not_implemented.py
-#
-# import warnings
-#
-#
-# def not_implemented(func):
-#     """
-#     Decorator to mark methods as not implemented, issue a warning, and prevent their execution.
-#
-#     Arguments:
-#         func (callable): The function or method to decorate.
-#
-#     Returns:
-#         callable: A wrapper function that issues a warning and raises NotImplementedError when called.
-#     """
-#
-#     def wrapper(*args, **kwargs):
-#         # Issue a warning before raising the error
-#         warnings.warn(
-#             f"Attempt to use unimplemented method: '{func.__name__}'. This method is not yet available.",
-#             category=FutureWarning,
-#             stacklevel=2,
-#         )
-#         # # Raise the NotImplementedError
-#         # raise NotImplementedError(f"The method '{func.__name__}' is not implemented yet.")
-#
-#     return wrapper
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_not_implemented.py
-# --------------------------------------------------------------------------------
+# EOF

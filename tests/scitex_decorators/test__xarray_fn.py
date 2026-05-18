@@ -9,7 +9,6 @@ __DIR__ = os.path.dirname(__FILE__)
 # ----------------------------------------
 
 from functools import wraps
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -26,88 +25,178 @@ from scitex_decorators import xarray_fn
 
 
 @pytest.fixture
-def test_data():
-    """Create test data for tests."""
-    return {
-        "list": [1.0, 2.0, 3.0],
-        "numpy": np.array([1.0, 2.0, 3.0]),
-        "pandas_series": pd.Series([1.0, 2.0, 3.0]),
-        "pandas_df": pd.DataFrame({"col1": [1.0, 2.0, 3.0]}),
-        "torch": torch.tensor([1.0, 2.0, 3.0]),
-        "xarray": xr.DataArray([1.0, 2.0, 3.0]),
-    }
+def list_input():
+    # Arrange
+    return [1.0, 2.0, 3.0]
 
 
-def test_xarray_fn_with_list_input(test_data):
-    """Test xarray_fn with list input."""
+@pytest.fixture
+def numpy_input():
+    # Arrange
+    return np.array([1.0, 2.0, 3.0])
 
+
+@pytest.fixture
+def xarray_input():
+    # Arrange
+    return xr.DataArray([1.0, 2.0, 3.0])
+
+
+@pytest.fixture
+def torch_input():
+    # Arrange
+    return torch.tensor([1.0, 2.0, 3.0])
+
+
+@pytest.fixture
+def list_plus_one_result(list_input):
+    # Arrange
     @xarray_fn
-    def dummy_function(arr):
-        # Check that input is indeed a DataArray
-        assert isinstance(arr, xr.DataArray)
+    def add_one(arr):
         return arr + 1.0
 
-    # Input is a list, output should be list
-    result = dummy_function(test_data["list"])
-    assert isinstance(result, list)
-    assert result == [2.0, 3.0, 4.0]
+    # Act
+    return add_one(list_input)
 
 
-def test_xarray_fn_with_xarray_input(test_data):
-    """Test xarray_fn with xarray input."""
+def test_xarray_fn_with_list_input_inner_receives_dataarray(list_input):
+    # Arrange
+    seen = {}
 
     @xarray_fn
-    def dummy_function(arr):
-        assert isinstance(arr, xr.DataArray)
+    def capture_type(arr):
+        seen["type"] = type(arr)
+        return arr + 1.0
+
+    # Act
+    capture_type(list_input)
+    # Assert
+    assert seen["type"] is xr.DataArray
+
+
+def test_xarray_fn_with_list_input_returns_list(list_plus_one_result):
+    # Arrange
+    expected_type = list
+    # Act
+    actual = list_plus_one_result
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_xarray_fn_with_list_input_returns_correct_values(list_plus_one_result):
+    # Arrange
+    expected = [2.0, 3.0, 4.0]
+    # Act
+    actual = list_plus_one_result
+    # Assert
+    assert actual == expected
+
+
+@pytest.fixture
+def xarray_doubled_result(xarray_input):
+    # Arrange
+    @xarray_fn
+    def doubler(arr):
         return arr * 2.0
 
-    # Input is xarray, output should be xarray
-    result = dummy_function(test_data["xarray"])
-    assert isinstance(result, xr.DataArray)
-    xr.testing.assert_allclose(result, xr.DataArray([2.0, 4.0, 6.0]))
+    # Act
+    return doubler(xarray_input)
 
 
-def test_xarray_fn_with_numpy_input(test_data):
-    """Test xarray_fn with numpy input."""
+def test_xarray_fn_with_xarray_input_returns_dataarray(xarray_doubled_result):
+    # Arrange
+    expected_type = xr.DataArray
+    # Act
+    actual = xarray_doubled_result
+    # Assert
+    assert isinstance(actual, expected_type)
 
+
+def test_xarray_fn_with_xarray_input_returns_correct_values(xarray_doubled_result):
+    # Arrange
+    expected = xr.DataArray([2.0, 4.0, 6.0])
+    # Act
+    actual = xarray_doubled_result
+    # Assert
+    assert np.allclose(actual.values, expected.values)
+
+
+@pytest.fixture
+def numpy_tripled_result(numpy_input):
+    # Arrange
     @xarray_fn
-    def dummy_function(arr):
-        assert isinstance(arr, xr.DataArray)
+    def tripler(arr):
         return arr * 3.0
 
-    # Input is numpy, output should be numpy
-    result = dummy_function(test_data["numpy"])
-    assert isinstance(result, np.ndarray)
-    np.testing.assert_allclose(result, np.array([3.0, 6.0, 9.0]))
+    # Act
+    return tripler(numpy_input)
 
 
-def test_xarray_fn_nested_decorator(test_data):
-    """Test nested decorator behavior with xarray_fn."""
+def test_xarray_fn_with_numpy_input_returns_ndarray(numpy_tripled_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = numpy_tripled_result
+    # Assert
+    assert isinstance(actual, expected_type)
 
-    # Create a dummy decorator to simulate nesting
+
+def test_xarray_fn_with_numpy_input_returns_correct_values(numpy_tripled_result):
+    # Arrange
+    expected = np.array([3.0, 6.0, 9.0])
+    # Act
+    actual = numpy_tripled_result
+    # Assert
+    assert np.allclose(actual, expected)
+
+
+@pytest.fixture
+def nested_decorator_result(torch_input):
+    # Arrange
     def dummy_decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Set nested context
             wrapper._current_decorator = "dummy_decorator"
             return func(*args, **kwargs)
 
         wrapper._is_wrapper = True
         return wrapper
 
-    # Apply both decorators (nested)
-    @xarray_fn
-    @dummy_decorator
-    def nested_function(arr):
-        # In nested mode, the type should pass through unchanged from dummy_decorator
-        assert not isinstance(arr, xr.DataArray)
-        return arr
+    import scitex_decorators._xarray_fn as xarray_fn_module
 
-    with patch("scitex_decorators._xarray_fn.is_nested_decorator", return_value=True):
-        # Input list should stay as list due to nested context
-        result = nested_function(test_data["torch"])
-        assert isinstance(result, torch.Tensor)
-        torch.testing.assert_close(result, test_data["torch"])
+    _orig_is_nested = xarray_fn_module.is_nested_decorator
+    xarray_fn_module.is_nested_decorator = lambda: True
+    try:
+
+        @xarray_fn
+        @dummy_decorator
+        def nested_function(arr):
+            return arr
+
+        # Act
+        return nested_function(torch_input)
+    finally:
+        xarray_fn_module.is_nested_decorator = _orig_is_nested
+
+
+def test_xarray_fn_nested_decorator_returns_tensor(nested_decorator_result):
+    # Arrange
+    expected_type = torch.Tensor
+    # Act
+    actual = nested_decorator_result
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_xarray_fn_nested_decorator_preserves_values(
+    nested_decorator_result, torch_input
+):
+    # Arrange
+    expected = torch_input
+    # Act
+    actual = nested_decorator_result
+    # Assert
+    assert torch.allclose(actual, expected)
 
 
 if __name__ == "__main__":
@@ -117,118 +206,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_xarray_fn.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Timestamp: "2025-04-30 15:41:19 (ywatanabe)"
-# # File: /home/ywatanabe/proj/scitex_repo/src/scitex/decorators/_xarray_fn.py
-# # ----------------------------------------
-# import os
-#
-# __FILE__ = "./src/scitex/decorators/_xarray_fn.py"
-# __DIR__ = os.path.dirname(__FILE__)
-# # ----------------------------------------
-# from functools import wraps
-# from typing import Any as _Any
-# from typing import Callable
-#
-# import numpy as np
-#
-# from ._converters import is_nested_decorator
-#
-#
-# def xarray_fn(func: Callable) -> Callable:
-#     @wraps(func)
-#     def wrapper(*args: _Any, **kwargs: _Any) -> _Any:
-#         # Skip conversion if already in a nested decorator context
-#         if is_nested_decorator():
-#             results = func(*args, **kwargs)
-#             return results
-#
-#         # Set the current decorator context
-#         wrapper._current_decorator = "xarray_fn"
-#
-#         # Store original object for type preservation
-#         original_object = args[0] if args else None
-#
-#         # Convert args to xarray DataArrays
-#         def to_xarray(data):
-#             import xarray as xr
-#             import pandas as pd
-#             import torch
-#
-#             if isinstance(data, xr.DataArray):
-#                 return data
-#             elif isinstance(data, np.ndarray):
-#                 return xr.DataArray(data)
-#             elif isinstance(data, list):
-#                 return xr.DataArray(data)
-#             elif hasattr(data, "__class__") and data.__class__.__name__ == "Tensor":
-#                 return xr.DataArray(data.detach().cpu().numpy())
-#             elif hasattr(data, "__class__") and data.__class__.__name__ == "DataFrame":
-#                 return xr.DataArray(data.values)
-#             elif hasattr(data, "__class__") and data.__class__.__name__ == "Series":
-#                 return xr.DataArray(data.values)
-#             else:
-#                 return xr.DataArray([data])
-#
-#         converted_args = [to_xarray(arg) for arg in args]
-#         converted_kwargs = {k: to_xarray(v) for k, v in kwargs.items()}
-#
-#         # Assertion to ensure all args are converted to xarray DataArrays
-#         import xarray as xr
-#
-#         for arg_index, arg in enumerate(converted_args):
-#             assert isinstance(arg, xr.DataArray), (
-#                 f"Argument {arg_index} not converted to DataArray: {type(arg)}"
-#             )
-#
-#         results = func(*converted_args, **converted_kwargs)
-#
-#         # Convert results back to original input types
-#         import xarray as xr
-#
-#         if isinstance(results, xr.DataArray):
-#             if original_object is not None:
-#                 if isinstance(original_object, list):
-#                     return results.values.tolist()
-#                 elif isinstance(original_object, np.ndarray):
-#                     return results.values
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "Tensor"
-#                 ):
-#                     import torch
-#
-#                     return torch.tensor(results.values)
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "DataFrame"
-#                 ):
-#                     import pandas as pd
-#
-#                     return pd.DataFrame(results.values)
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "Series"
-#                 ):
-#                     import pandas as pd
-#
-#                     return pd.Series(results.values.flatten())
-#             return results
-#
-#         return results
-#
-#     # Mark as a wrapper for detection
-#     wrapper._is_wrapper = True
-#     wrapper._decorator_type = "xarray_fn"
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_xarray_fn.py
-# --------------------------------------------------------------------------------
+# EOF

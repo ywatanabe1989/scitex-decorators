@@ -9,7 +9,6 @@ __DIR__ = os.path.dirname(__FILE__)
 # ----------------------------------------
 
 from functools import wraps
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -26,88 +25,181 @@ from scitex_decorators import pandas_fn
 
 
 @pytest.fixture
-def test_data():
-    """Create test data for tests."""
-    return {
-        "list": [1.0, 2.0, 3.0],
-        "numpy": np.array([1.0, 2.0, 3.0]),
-        "pandas_series": pd.Series([1.0, 2.0, 3.0]),
-        "pandas_df": pd.DataFrame({"col1": [1.0, 2.0, 3.0]}),
-        "torch": torch.tensor([1.0, 2.0, 3.0]),
-        "xarray": xr.DataArray([1.0, 2.0, 3.0]),
-    }
+def list_input():
+    # Arrange
+    return [1.0, 2.0, 3.0]
 
 
-def test_pandas_fn_with_list_input(test_data):
-    """Test pandas_fn with list input."""
+@pytest.fixture
+def numpy_input():
+    # Arrange
+    return np.array([1.0, 2.0, 3.0])
 
+
+@pytest.fixture
+def pandas_df_input():
+    # Arrange
+    return pd.DataFrame({"col1": [1.0, 2.0, 3.0]})
+
+
+@pytest.fixture
+def pandas_series_input():
+    # Arrange
+    return pd.Series([1.0, 2.0, 3.0])
+
+
+@pytest.fixture
+def list_plus_one_result(list_input):
+    # Arrange
     @pandas_fn
-    def dummy_function(df):
-        # Check that input is indeed a DataFrame
-        assert isinstance(df, pd.DataFrame)
+    def add_one(df):
         return df + 1.0
 
-    # Input is a list, output should be list
-    result = dummy_function(test_data["list"])
-    assert isinstance(result, list)
-    assert result == [[2.0], [3.0], [4.0]] or result == [2.0, 3.0, 4.0]
+    # Act
+    return add_one(list_input)
 
 
-def test_pandas_fn_with_df_input(test_data):
-    """Test pandas_fn with DataFrame input."""
+def test_pandas_fn_with_list_input_inner_receives_dataframe(list_input):
+    # Arrange
+    seen = {}
 
     @pandas_fn
-    def dummy_function(df):
-        assert isinstance(df, pd.DataFrame)
+    def capture_type(df):
+        seen["type"] = type(df)
+        return df + 1.0
+
+    # Act
+    capture_type(list_input)
+    # Assert
+    assert seen["type"] is pd.DataFrame
+
+
+def test_pandas_fn_with_list_input_returns_list(list_plus_one_result):
+    # Arrange
+    expected_type = list
+    # Act
+    actual = list_plus_one_result
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_pandas_fn_with_list_input_returns_correct_values(list_plus_one_result):
+    # Arrange
+    valid = (
+        list_plus_one_result == [[2.0], [3.0], [4.0]]
+        or list_plus_one_result == [2.0, 3.0, 4.0]
+    )
+    # Act
+    result = valid
+    # Assert
+    assert result
+
+
+@pytest.fixture
+def df_doubled_result(pandas_df_input):
+    # Arrange
+    @pandas_fn
+    def doubler(df):
         return df * 2.0
 
-    # Input is DataFrame, output should be DataFrame
-    result = dummy_function(test_data["pandas_df"])
-    assert isinstance(result, pd.DataFrame)
-    pd.testing.assert_frame_equal(result, pd.DataFrame({"col1": [2.0, 4.0, 6.0]}))
+    # Act
+    return doubler(pandas_df_input)
 
 
-def test_pandas_fn_with_numpy_input(test_data):
-    """Test pandas_fn with numpy input."""
+def test_pandas_fn_with_df_input_returns_dataframe(df_doubled_result):
+    # Arrange
+    expected_type = pd.DataFrame
+    # Act
+    actual = df_doubled_result
+    # Assert
+    assert isinstance(actual, expected_type)
 
+
+def test_pandas_fn_with_df_input_returns_correct_values(df_doubled_result):
+    # Arrange
+    expected = pd.DataFrame({"col1": [2.0, 4.0, 6.0]})
+    # Act
+    actual = df_doubled_result
+    # Assert
+    assert actual.equals(expected)
+
+
+@pytest.fixture
+def numpy_tripled_result(numpy_input):
+    # Arrange
     @pandas_fn
-    def dummy_function(df):
-        assert isinstance(df, pd.DataFrame)
+    def tripler(df):
         return df * 3.0
 
-    # Input is numpy, output should be numpy
-    result = dummy_function(test_data["numpy"])
-    assert isinstance(result, np.ndarray)
-    np.testing.assert_allclose(result, np.array([[3.0], [6.0], [9.0]]))
+    # Act
+    return tripler(numpy_input)
 
 
-def test_pandas_fn_nested_decorator(test_data):
-    """Test nested decorator behavior with pandas_fn."""
+def test_pandas_fn_with_numpy_input_returns_ndarray(numpy_tripled_result):
+    # Arrange
+    expected_type = np.ndarray
+    # Act
+    actual = numpy_tripled_result
+    # Assert
+    assert isinstance(actual, expected_type)
 
-    # Create a dummy decorator to simulate nesting
+
+def test_pandas_fn_with_numpy_input_returns_correct_values(numpy_tripled_result):
+    # Arrange
+    expected = np.array([[3.0], [6.0], [9.0]])
+    # Act
+    actual = numpy_tripled_result
+    # Assert
+    assert np.allclose(actual, expected)
+
+
+@pytest.fixture
+def nested_decorator_result(pandas_series_input):
+    # Arrange
     def dummy_decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Set nested context
             wrapper._current_decorator = "dummy_decorator"
             return func(*args, **kwargs)
 
         wrapper._is_wrapper = True
         return wrapper
 
-    # Apply both decorators (nested)
-    @pandas_fn
-    @dummy_decorator
-    def nested_function(arr):
-        # In nested mode, the type should pass through unchanged from dummy_decorator
-        assert not isinstance(arr, pd.DataFrame)
-        return arr
+    import scitex_decorators._pandas_fn as pandas_fn_module
 
-    with patch("scitex_decorators._pandas_fn.is_nested_decorator", return_value=True):
-        # Input series should stay as series due to nested context
-        result = nested_function(test_data["pandas_series"])
-        assert isinstance(result, pd.Series)
-        pd.testing.assert_series_equal(result, test_data["pandas_series"])
+    _orig_is_nested = pandas_fn_module.is_nested_decorator
+    pandas_fn_module.is_nested_decorator = lambda: True
+    try:
+
+        @pandas_fn
+        @dummy_decorator
+        def nested_function(arr):
+            return arr
+
+        # Act
+        return nested_function(pandas_series_input)
+    finally:
+        pandas_fn_module.is_nested_decorator = _orig_is_nested
+
+
+def test_pandas_fn_nested_decorator_returns_series(nested_decorator_result):
+    # Arrange
+    expected_type = pd.Series
+    # Act
+    actual = nested_decorator_result
+    # Assert
+    assert isinstance(actual, expected_type)
+
+
+def test_pandas_fn_nested_decorator_preserves_values(
+    nested_decorator_result, pandas_series_input
+):
+    # Arrange
+    expected = pandas_series_input
+    # Act
+    actual = nested_decorator_result
+    # Assert
+    assert actual.equals(expected)
 
 
 if __name__ == "__main__":
@@ -117,148 +209,4 @@ if __name__ == "__main__":
 
     pytest.main([os.path.abspath(__file__)])
 
-# --------------------------------------------------------------------------------
-# Start of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_pandas_fn.py
-# --------------------------------------------------------------------------------
-# #!/usr/bin/env python3
-# # -*- coding: utf-8 -*-
-# # Timestamp: "2025-04-30 15:44:00 (ywatanabe)"
-# # File: /home/ywatanabe/proj/scitex_repo/src/scitex/decorators/_pandas_fn.py
-# # ----------------------------------------
-# import os
-#
-# __FILE__ = "./src/scitex/decorators/_pandas_fn.py"
-# __DIR__ = os.path.dirname(__FILE__)
-# # ----------------------------------------
-#
-# THIS_FILE = "/home/ywatanabe/proj/scitex_repo/src/scitex/decorators/_pandas_fn.py"
-#
-# from functools import wraps
-# from typing import Any as _Any
-# from typing import Callable
-#
-# import numpy as np
-#
-# from ._converters import is_nested_decorator
-#
-#
-# def pandas_fn(func: Callable) -> Callable:
-#     @wraps(func)
-#     def wrapper(*args: _Any, **kwargs: _Any) -> _Any:
-#         # Skip conversion if already in a nested decorator context
-#         if is_nested_decorator():
-#             results = func(*args, **kwargs)
-#             return results
-#
-#         # Set the current decorator context
-#         wrapper._current_decorator = "pandas_fn"
-#
-#         # Store original object for type preservation
-#         original_object = args[0] if args else None
-#
-#         # Convert args to pandas DataFrames
-#         def to_pandas(data):
-#             import pandas as pd
-#             import torch
-#             import xarray as xr
-#
-#             if data is None:
-#                 return None
-#             elif isinstance(data, pd.DataFrame):
-#                 return data
-#             elif isinstance(data, pd.Series):
-#                 return pd.DataFrame(data)
-#             elif isinstance(data, np.ndarray):
-#                 return pd.DataFrame(data)
-#             elif isinstance(data, list):
-#                 try:
-#                     return pd.DataFrame(data)
-#                 except:
-#                     # If list can't be converted to DataFrame, return as is
-#                     return data
-#             elif hasattr(data, "__class__") and data.__class__.__name__ == "Tensor":
-#                 return pd.DataFrame(data.detach().cpu().numpy())
-#             elif hasattr(data, "__class__") and data.__class__.__name__ == "DataArray":
-#                 return pd.DataFrame(data.values)
-#             elif isinstance(data, (int, float, str)):
-#                 # Don't convert scalars to DataFrames
-#                 return data
-#             else:
-#                 try:
-#                     return pd.DataFrame([data])
-#                 except:
-#                     # If conversion fails, return as is
-#                     return data
-#
-#         converted_args = [to_pandas(arg) for arg in args]
-#         converted_kwargs = {k: to_pandas(v) for k, v in kwargs.items()}
-#
-#         # Skip strict assertion for certain types
-#         import pandas as pd
-#
-#         validated_args = []
-#         for arg_index, arg in enumerate(converted_args):
-#             if isinstance(arg, pd.DataFrame):
-#                 validated_args.append(arg)
-#             elif isinstance(arg, (int, float, str, type(None), pd.Series)):
-#                 # Pass through scalars, strings, Series, and None unchanged
-#                 validated_args.append(arg)
-#             elif isinstance(arg, list) and all(
-#                 isinstance(item, pd.DataFrame) for item in arg
-#             ):
-#                 # List of DataFrames - pass through as is
-#                 validated_args.append(arg)
-#             else:
-#                 # Try one more conversion attempt
-#                 try:
-#                     validated_args.append(pd.DataFrame(arg))
-#                 except:
-#                     # If all else fails, pass through unchanged
-#                     validated_args.append(arg)
-#
-#         results = func(*validated_args, **converted_kwargs)
-#
-#         # Convert results back to original input types
-#         import pandas as pd
-#
-#         if isinstance(results, pd.DataFrame):
-#             if original_object is not None:
-#                 if isinstance(original_object, list):
-#                     return results.values.tolist()
-#                 elif isinstance(original_object, np.ndarray):
-#                     return results.values
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "Tensor"
-#                 ):
-#                     import torch
-#
-#                     return torch.tensor(results.values)
-#                 elif isinstance(original_object, pd.Series):
-#                     return (
-#                         pd.Series(results.iloc[:, 0])
-#                         if results.shape[1] > 0
-#                         else pd.Series()
-#                     )
-#                 elif (
-#                     hasattr(original_object, "__class__")
-#                     and original_object.__class__.__name__ == "DataArray"
-#                 ):
-#                     import xarray as xr
-#
-#                     return xr.DataArray(results.values)
-#             return results
-#
-#         return results
-#
-#     # Mark as a wrapper for detection
-#     wrapper._is_wrapper = True
-#     wrapper._decorator_type = "pandas_fn"
-#     return wrapper
-#
-#
-# # EOF
-
-# --------------------------------------------------------------------------------
-# End of Source Code from: /home/ywatanabe/proj/scitex-code/src/scitex/decorators/_pandas_fn.py
-# --------------------------------------------------------------------------------
+# EOF
