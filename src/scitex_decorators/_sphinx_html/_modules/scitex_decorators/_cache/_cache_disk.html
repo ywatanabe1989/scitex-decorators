@@ -46,9 +46,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/scitex_decorators.html">scitex_decorators</a></li>
-</ul>
 
         </div>
       </div>
@@ -90,6 +87,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">scitex_config._ecosystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">local_state</span>
 
 
@@ -115,7 +113,7 @@
 
 
 <div class="viewcode-block" id="cache_disk">
-<a class="viewcode-back" href="../../../api/scitex_decorators.html#scitex_decorators.cache_disk">[docs]</a>
+<a class="viewcode-back" href="../../../api.html#scitex_decorators.cache_disk">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">cache_disk</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Disk caching decorator that uses joblib.Memory.</span>
 
@@ -126,7 +124,8 @@
 <span class="sd">    time and broke any caller of scitex.io that didn&#39;t need caching at</span>
 <span class="sd">    all (todo#442, same class as #441 / #279).</span>
 
-<span class="sd">    Usage:</span>
+<span class="sd">    Usage::</span>
+
 <span class="sd">        @cache_disk</span>
 <span class="sd">        def expensive_function(x):</span>
 <span class="sd">            return x ** 2</span>

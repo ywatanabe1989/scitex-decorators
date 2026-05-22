@@ -46,9 +46,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/scitex_decorators.html">scitex_decorators</a></li>
-</ul>
 
         </div>
       </div>
@@ -88,17 +85,21 @@
 
 
 <div class="viewcode-block" id="wrap">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.wrap">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.wrap">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">wrap</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Basic function wrapper that preserves function metadata.</span>
-<span class="sd">    Usage:</span>
-<span class="sd">    @wrap</span>
-<span class="sd">    def my_function(x):</span>
-<span class="sd">        return x + 1</span>
-<span class="sd">    # Or manually:</span>
-<span class="sd">    def my_function(x):</span>
-<span class="sd">        return x + 1</span>
-<span class="sd">    wrapped_func = wrap(my_function)</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        @wrap</span>
+<span class="sd">        def my_function(x):</span>
+<span class="sd">            return x + 1</span>
+
+<span class="sd">        # Or manually:</span>
+<span class="sd">        def my_function(x):</span>
+<span class="sd">            return x + 1</span>
+<span class="sd">        wrapped_func = wrap(my_function)</span>
+
 <span class="sd">    This wrapper is useful as a template for creating more complex decorators</span>
 <span class="sd">    or when you want to ensure function metadata is preserved.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

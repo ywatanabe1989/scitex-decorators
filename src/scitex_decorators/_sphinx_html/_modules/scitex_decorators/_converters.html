@@ -46,9 +46,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/scitex_decorators.html">scitex_decorators</a></li>
-</ul>
 
         </div>
       </div>
@@ -100,7 +97,7 @@
 
 
 <div class="viewcode-block" id="ConversionWarning">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.ConversionWarning">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.ConversionWarning">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConversionWarning</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
@@ -145,7 +142,7 @@
 
 
 <div class="viewcode-block" id="is_torch">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.is_torch">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.is_torch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_torch</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if any input is a PyTorch tensor.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -157,7 +154,7 @@
 
 
 <div class="viewcode-block" id="is_cuda">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.is_cuda">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.is_cuda">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_cuda</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if any input is a CUDA tensor.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -186,7 +183,7 @@
 
 
 <div class="viewcode-block" id="to_torch">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.to_torch">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.to_torch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">to_torch</span><span class="p">(</span>
     <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span>
     <span class="n">return_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_return_if</span><span class="p">,</span>
@@ -320,7 +317,7 @@
 
 
 <div class="viewcode-block" id="to_numpy">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.to_numpy">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.to_numpy">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span> <span class="n">return_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_return_if</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert various data types to NumPy arrays.&quot;&quot;&quot;</span>
 
@@ -390,7 +387,7 @@
 
 
 <div class="viewcode-block" id="is_nested_decorator">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.is_nested_decorator">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.is_nested_decorator">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_nested_decorator</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if we&#39;re in a nested decorator context.&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>

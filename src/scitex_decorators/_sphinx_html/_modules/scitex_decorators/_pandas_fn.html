@@ -46,9 +46,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/scitex_decorators.html">scitex_decorators</a></li>
-</ul>
 
         </div>
       </div>
@@ -98,7 +95,7 @@
 
 
 <div class="viewcode-block" id="pandas_fn">
-<a class="viewcode-back" href="../../api/scitex_decorators.html#scitex_decorators.pandas_fn">[docs]</a>
+<a class="viewcode-back" href="../../api.html#scitex_decorators.pandas_fn">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pandas_fn</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Any</span><span class="p">:</span>

@@ -46,9 +46,6 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/scitex_decorators.html">scitex_decorators</a></li>
-</ul>
 
         </div>
       </div>
@@ -96,7 +93,7 @@
 
 
 <div class="viewcode-block" id="cache_disk_async">
-<a class="viewcode-back" href="../../../api/scitex_decorators.html#scitex_decorators.cache_disk_async">[docs]</a>
+<a class="viewcode-back" href="../../../api.html#scitex_decorators.cache_disk_async">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">cache_disk_async</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Disk caching decorator for async functions.</span>
 
@@ -106,7 +103,8 @@
 <span class="sd">    ``from joblib import Memory`` propagates ``ModuleNotFoundError`` up</span>
 <span class="sd">    the ``scitex.io`` import chain and breaks unrelated callers.</span>
 
-<span class="sd">    Usage:</span>
+<span class="sd">    Usage::</span>
+
 <span class="sd">        @cache_disk_async</span>
 <span class="sd">        async def expensive_async_function(x):</span>
 <span class="sd">            await asyncio.sleep(1)</span>

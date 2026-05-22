@@ -22,7 +22,6 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="scitex_decorators" href="api/scitex_decorators.html" />
     <link rel="prev" title="scitex-decorators" href="index.html" /> 
 </head>
 
@@ -79,9 +78,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#scitex_decorators.xarray_fn"><code class="docutils literal notranslate"><span class="pre">xarray_fn()</span></code></a></li>
 </ul>
 </li>
-</ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/scitex_decorators.html">scitex_decorators</a></li>
 </ul>
 
         </div>
@@ -202,14 +198,12 @@ installed. Without lazy-import, the eager <code class="docutils literal notransl
 raised <code class="docutils literal notranslate"><span class="pre">ModuleNotFoundError:</span> <span class="pre">No</span> <span class="pre">module</span> <span class="pre">named</span> <span class="pre">'joblib'</span></code> at import
 time and broke any caller of scitex.io that didn’t need caching at
 all (todo#442, same class as #441 / #279).</p>
-<dl>
-<dt>Usage:</dt><dd><p>&#64;cache_disk
-def expensive_function(x):</p>
-<blockquote>
-<div><p>return x ** 2</p>
-</div></blockquote>
-</dd>
-</dl>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@cache_disk</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">expensive_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -221,15 +215,13 @@ def expensive_function(x):</p>
 same class as #441 / #279). Without this, the eager top-level
 <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">joblib</span> <span class="pre">import</span> <span class="pre">Memory</span></code> propagates <code class="docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code> up
 the <code class="docutils literal notranslate"><span class="pre">scitex.io</span></code> import chain and breaks unrelated callers.</p>
-<dl>
-<dt>Usage:</dt><dd><p>&#64;cache_disk_async
-async def expensive_async_function(x):</p>
-<blockquote>
-<div><p>await asyncio.sleep(1)
-return x ** 2</p>
-</div></blockquote>
-</dd>
-</dl>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@cache_disk_async</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">expensive_async_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="mi">2</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -508,20 +500,19 @@ def my_function(x): …</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="scitex_decorators.wrap">
 <span class="sig-prename descclassname"><span class="pre">scitex_decorators.</span></span><span class="sig-name descname"><span class="pre">wrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scitex_decorators/_wrap.html#wrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_decorators.wrap" title="Link to this definition"></a></dt>
-<dd><p>Basic function wrapper that preserves function metadata.
-Usage:
-&#64;wrap
-def my_function(x):</p>
-<blockquote>
-<div><p>return x + 1</p>
-</div></blockquote>
-<p># Or manually:
-def my_function(x):</p>
-<blockquote>
-<div><p>return x + 1</p>
-</div></blockquote>
-<p>wrapped_func = wrap(my_function)
-This wrapper is useful as a template for creating more complex decorators
+<dd><p>Basic function wrapper that preserves function metadata.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@wrap</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="c1"># Or manually:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">wrapped_func</span> <span class="o">=</span> <span class="n">wrap</span><span class="p">(</span><span class="n">my_function</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This wrapper is useful as a template for creating more complex decorators
 or when you want to ensure function metadata is preserved.</p>
 </dd></dl>
 
@@ -542,7 +533,6 @@ or when you want to ensure function metadata is preserved.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index.html" class="btn btn-neutral float-left" title="scitex-decorators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api/scitex_decorators.html" class="btn btn-neutral float-right" title="scitex_decorators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

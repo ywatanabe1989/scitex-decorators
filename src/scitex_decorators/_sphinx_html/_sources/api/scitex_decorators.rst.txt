@@ -1,6 +1,0 @@
-﻿scitex\_decorators
-==================
-
-.. automodule:: scitex_decorators
-
-   
