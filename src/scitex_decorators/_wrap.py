@@ -12,14 +12,18 @@ __DIR__ = os.path.dirname(__FILE__)
 
 def wrap(func):
     """Basic function wrapper that preserves function metadata.
-    Usage:
-    @wrap
-    def my_function(x):
-        return x + 1
-    # Or manually:
-    def my_function(x):
-        return x + 1
-    wrapped_func = wrap(my_function)
+
+    Usage::
+
+        @wrap
+        def my_function(x):
+            return x + 1
+
+        # Or manually:
+        def my_function(x):
+            return x + 1
+        wrapped_func = wrap(my_function)
+
     This wrapper is useful as a template for creating more complex decorators
     or when you want to ensure function metadata is preserved.
     """

@@ -109,10 +109,7 @@ class TestAutoOrder:
         # Act
         enable_auto_order()
         # Assert
-        assert (
-            scitex_decorators.torch_fn.__class__.__name__
-            == "AutoOrderDecorator"
-        )
+        assert scitex_decorators.torch_fn.__class__.__name__ == "AutoOrderDecorator"
 
     def test_enable_auto_order_replaces_numpy_fn_with_decorator_class(
         self, _autoorder_off
@@ -123,10 +120,7 @@ class TestAutoOrder:
         # Act
         enable_auto_order()
         # Assert
-        assert (
-            scitex_decorators.numpy_fn.__class__.__name__
-            == "AutoOrderDecorator"
-        )
+        assert scitex_decorators.numpy_fn.__class__.__name__ == "AutoOrderDecorator"
 
     def test_enable_auto_order_replaces_pandas_fn_with_decorator_class(
         self, _autoorder_off
@@ -137,10 +131,7 @@ class TestAutoOrder:
         # Act
         enable_auto_order()
         # Assert
-        assert (
-            scitex_decorators.pandas_fn.__class__.__name__
-            == "AutoOrderDecorator"
-        )
+        assert scitex_decorators.pandas_fn.__class__.__name__ == "AutoOrderDecorator"
 
     def test_enable_auto_order_replaces_batch_fn_with_decorator_class(
         self, _autoorder_off
@@ -151,14 +142,9 @@ class TestAutoOrder:
         # Act
         enable_auto_order()
         # Assert
-        assert (
-            scitex_decorators.batch_fn.__class__.__name__
-            == "AutoOrderDecorator"
-        )
+        assert scitex_decorators.batch_fn.__class__.__name__ == "AutoOrderDecorator"
 
-    def test_disable_auto_order_restores_original_torch_fn(
-        self, _autoorder_off
-    ):
+    def test_disable_auto_order_restores_original_torch_fn(self, _autoorder_off):
         """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
         the module's ``torch_fn`` must be the original function-named one."""
         # Arrange
@@ -168,9 +154,7 @@ class TestAutoOrder:
         # Assert
         assert scitex_decorators.torch_fn.__name__ == "torch_fn"
 
-    def test_disable_auto_order_restores_original_numpy_fn(
-        self, _autoorder_off
-    ):
+    def test_disable_auto_order_restores_original_numpy_fn(self, _autoorder_off):
         """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
         the module's ``numpy_fn`` must be the original function-named one."""
         # Arrange
@@ -180,9 +164,7 @@ class TestAutoOrder:
         # Assert
         assert scitex_decorators.numpy_fn.__name__ == "numpy_fn"
 
-    def test_disable_auto_order_restores_original_pandas_fn(
-        self, _autoorder_off
-    ):
+    def test_disable_auto_order_restores_original_pandas_fn(self, _autoorder_off):
         """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
         the module's ``pandas_fn`` must be the original function-named one."""
         # Arrange
@@ -192,9 +174,7 @@ class TestAutoOrder:
         # Assert
         assert scitex_decorators.pandas_fn.__name__ == "pandas_fn"
 
-    def test_disable_auto_order_restores_original_batch_fn(
-        self, _autoorder_off
-    ):
+    def test_disable_auto_order_restores_original_batch_fn(self, _autoorder_off):
         """After ``enable_auto_order()`` followed by ``disable_auto_order()``,
         the module's ``batch_fn`` must be the original function-named one."""
         # Arrange
@@ -222,6 +202,7 @@ class TestAutoOrder:
     ):
         """Stacking ``@batch_fn @ numpy_fn @ torch_fn`` on a torch input must
         return a numeric-compatible result, not raise."""
+
         # Arrange
         @scitex_decorators.batch_fn
         @scitex_decorators.numpy_fn
@@ -235,11 +216,10 @@ class TestAutoOrder:
         # Assert
         assert isinstance(result, (torch.Tensor, np.ndarray, np.floating, float))
 
-    def test_auto_ordering_supports_complex_pandas_torch_stacking(
-        self, _autoorder_on
-    ):
+    def test_auto_ordering_supports_complex_pandas_torch_stacking(self, _autoorder_on):
         """Stacking ``@pandas_fn @ torch_fn`` on numpy input must return a
         ``pd.Series`` once auto-ordering reorders the converters."""
+
         # Arrange
         @scitex_decorators.pandas_fn
         @scitex_decorators.torch_fn
@@ -305,14 +285,15 @@ class TestAutoOrder:
 class TestAutoOrderIntegration:
     """Test auto-ordering with real use cases"""
 
-    def test_stats_describe_returns_expected_first_output_shape(
-        self, _autoorder_on
-    ):
-        """``scitex.stats.describe`` invoked under auto-ordering on a
+    def test_stats_describe_returns_expected_first_output_shape(self, _autoorder_on):
+        """``scitex_stats.describe`` invoked under auto-ordering on a
         4-D tensor with ``dim=(1,2,3)`` returns a stats array of shape
         ``(87, 7)``."""
         # Arrange
-        from scitex.stats import describe
+        # scitex-stats is an optional integration dep, not a hard
+        # requirement of scitex-decorators — skip when it isn't installed.
+        pytest.importorskip("scitex_stats")
+        from scitex_stats import describe
 
         features_pac_z = np.random.randn(87, 5, 50, 30)
         tensor_input = torch.tensor(features_pac_z)
@@ -322,10 +303,13 @@ class TestAutoOrderIntegration:
         assert out[0].shape == (87, 7)
 
     def test_stats_describe_returns_seven_stat_labels(self, _autoorder_on):
-        """``scitex.stats.describe`` invoked under auto-ordering returns a
+        """``scitex_stats.describe`` invoked under auto-ordering returns a
         labels list of length 7 (one per summarised statistic)."""
         # Arrange
-        from scitex.stats import describe
+        # scitex-stats is an optional integration dep, not a hard
+        # requirement of scitex-decorators — skip when it isn't installed.
+        pytest.importorskip("scitex_stats")
+        from scitex_stats import describe
 
         features_pac_z = np.random.randn(87, 5, 50, 30)
         tensor_input = torch.tensor(features_pac_z)
@@ -334,11 +318,10 @@ class TestAutoOrderIntegration:
         # Assert
         assert len(out[1]) == 7
 
-    def test_torch_fn_under_auto_order_accepts_nested_python_lists(
-        self, _autoorder_on
-    ):
+    def test_torch_fn_under_auto_order_accepts_nested_python_lists(self, _autoorder_on):
         """Under auto-ordering, ``@torch_fn`` must accept nested Python lists
         and return a result equal to ``np.array(nested).mean()``."""
+
         # Arrange
         @scitex_decorators.torch_fn
         def process_nested(x):
@@ -357,6 +340,7 @@ class TestAutoOrderIntegration:
         """Under auto-ordering, ``@torch_fn`` must forward scalar kwargs as
         floats so the body's ``isinstance(scale, float)`` assertion holds
         and the returned tensor equals ``data * scale``."""
+
         # Arrange
         @scitex_decorators.torch_fn
         def scale_tensor(x, scale=2.5):

@@ -13,6 +13,7 @@ __DIR__ = os.path.dirname(__FILE__)
 
 import functools
 from pathlib import Path
+
 from scitex_config._ecosystem import local_state
 
 
@@ -47,7 +48,8 @@ def cache_disk(func):
     time and broke any caller of scitex.io that didn't need caching at
     all (todo#442, same class as #441 / #279).
 
-    Usage:
+    Usage::
+
         @cache_disk
         def expensive_function(x):
             return x ** 2
