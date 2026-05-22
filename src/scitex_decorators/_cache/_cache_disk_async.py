@@ -27,7 +27,8 @@ def cache_disk_async(func):
     ``from joblib import Memory`` propagates ``ModuleNotFoundError`` up
     the ``scitex.io`` import chain and breaks unrelated callers.
 
-    Usage:
+    Usage::
+
         @cache_disk_async
         async def expensive_async_function(x):
             await asyncio.sleep(1)
