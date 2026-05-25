@@ -34,6 +34,7 @@ The auto-ordering system eliminates decorator ordering complexity and
 prevents common errors from incorrect decorator stacking.
 """
 
+import sys
 from functools import wraps
 from typing import Callable
 
@@ -135,7 +136,7 @@ def enable_auto_order():
     >>> def my_func(x):
     ...     return x.mean()
     """
-    import scitex_decorators as decorators_module
+    decorators_module = sys.modules[__name__.rsplit(".", 1)[0]]
 
     # Replace with auto-ordering versions
     decorators_module.torch_fn = torch_fn
@@ -151,7 +152,7 @@ def enable_auto_order():
 
 def disable_auto_order():
     """Disable auto-ordering and restore original decorators."""
-    import scitex_decorators as decorators_module
+    decorators_module = sys.modules[__name__.rsplit(".", 1)[0]]
 
     # Restore original decorators
     decorators_module.torch_fn = _orig_torch_fn
