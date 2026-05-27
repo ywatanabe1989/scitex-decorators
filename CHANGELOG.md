@@ -7,6 +7,11 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- fix: resolve cache dir under `decorators/runtime/` via `local_state.runtime_path`
+- fix: correct `SciTeX_DIR` → `SCITEX_DIR` env var casing in tests (Linux is case-sensitive)
+- docs: update README cache-dir resolution to match actual code
+- chore: add `.gitignore` entries for `.scitex/*/runtime/`
+
 ## [0.1.12] — 2026-05-25
 
 - fix(tests): guard auto-order integration tests against umbrella import
