@@ -20,7 +20,6 @@ import pytest
 
 # ===== AUTO-GENERATED: cross-package imports =====
 CROSS_PACKAGE_IMPORTS = [
-    "scitex_config",
     "scitex_config._ecosystem",
     "scitex_dev",
 ]
@@ -35,4 +34,4 @@ def test_cross_package_import_resolves_module(module_name):
     # Act
     mod = pytest.importorskip(name)
     # Assert
-    assert mod.__name__ == name or mod.__name__.startswith(name.split('.')[0])
+    assert mod.__name__ == name or mod.__name__.startswith(name.split(".")[0])
