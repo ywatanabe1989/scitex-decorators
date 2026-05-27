@@ -95,15 +95,15 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return cache directory.</span>
 
 <span class="sd">    Resolution order:</span>
-<span class="sd">      1. ``scitex.config.get_paths().function_cache`` if available.</span>
+<span class="sd">      1. ``local_state.runtime_path(&quot;decorators&quot;, &quot;cache&quot;)`` — resolves</span>
+<span class="sd">         ``$SCITEX_DIR/decorators/runtime/cache`` (defaults to</span>
+<span class="sd">         ``~/.scitex/decorators/runtime/cache``).</span>
 <span class="sd">      2. ``$SCITEX_CACHE_DIR/function_cache`` if set.</span>
 <span class="sd">      3. ``$SCITEX_DIR/decorators/runtime/cache`` (defaults to</span>
 <span class="sd">         ``~/.scitex/decorators/runtime/cache``).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">scitex_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_paths</span>
-
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_paths</span><span class="p">()</span><span class="o">.</span><span class="n">function_cache</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_state</span><span class="o">.</span><span class="n">runtime_path</span><span class="p">(</span><span class="s2">&quot;decorators&quot;</span><span class="p">,</span> <span class="s2">&quot;cache&quot;</span><span class="p">))</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SCITEX_CACHE_DIR&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">env</span><span class="p">:</span>
