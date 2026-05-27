@@ -21,15 +21,15 @@ def _resolve_cache_dir() -> str:
     """Return cache directory.
 
     Resolution order:
-      1. ``scitex.config.get_paths().function_cache`` if available.
+      1. ``local_state.runtime_path("decorators", "cache")`` — resolves
+         ``$SCITEX_DIR/decorators/runtime/cache`` (defaults to
+         ``~/.scitex/decorators/runtime/cache``).
       2. ``$SCITEX_CACHE_DIR/function_cache`` if set.
       3. ``$SCITEX_DIR/decorators/runtime/cache`` (defaults to
          ``~/.scitex/decorators/runtime/cache``).
     """
     try:
-        from scitex_config import get_paths
-
-        return str(get_paths().function_cache)
+        return str(local_state.runtime_path("decorators", "cache"))
     except Exception:
         env = os.environ.get("SCITEX_CACHE_DIR")
         if env:

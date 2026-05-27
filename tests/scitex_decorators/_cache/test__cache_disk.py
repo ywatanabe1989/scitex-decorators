@@ -61,6 +61,7 @@ def disk_cache_tmp_dir():
 def test_cache_disk_import_exposes_callable():
     # Arrange
     from scitex_decorators import cache_disk
+
     # Act
     result = callable(cache_disk)
     # Assert
@@ -432,15 +433,15 @@ def test_cache_disk_performance_second_call_faster_than_first(performance_disk_r
 
 
 # ---------------------------------------------------------------------------
-# SciTeX_DIR environment variable handling — using manual save/restore
+# SCITEX_DIR environment variable handling — using manual save/restore
 # ---------------------------------------------------------------------------
 @pytest.fixture
 def scitex_dir_env_runner():
     # Arrange
     tmp = tempfile.mkdtemp()
     custom_scitex_dir = os.path.join(tmp, "custom_scitex") + os.sep
-    _save = os.environ.get("SciTeX_DIR")
-    os.environ["SciTeX_DIR"] = custom_scitex_dir
+    _save = os.environ.get("SCITEX_DIR")
+    os.environ["SCITEX_DIR"] = custom_scitex_dir
     try:
         from scitex_decorators import cache_disk
 
@@ -453,9 +454,9 @@ def scitex_dir_env_runner():
         yield {"result": result}
     finally:
         if _save is None:
-            os.environ.pop("SciTeX_DIR", None)
+            os.environ.pop("SCITEX_DIR", None)
         else:
-            os.environ["SciTeX_DIR"] = _save
+            os.environ["SCITEX_DIR"] = _save
         if os.path.exists(tmp):
             shutil.rmtree(tmp)
 
@@ -638,15 +639,15 @@ def test_cache_disk_successful_call_is_cached(exceptions_disk_runner):
 
 
 # ---------------------------------------------------------------------------
-# Cache directory creation under custom SciTeX_DIR — manual env save/restore
+# Cache directory creation under custom SCITEX_DIR — manual env save/restore
 # ---------------------------------------------------------------------------
 @pytest.fixture
 def cache_directory_creation_runner():
     # Arrange
     tmp = tempfile.mkdtemp()
     custom_scitex_dir = os.path.join(tmp, "test_scitex") + os.sep
-    _save = os.environ.get("SciTeX_DIR")
-    os.environ["SciTeX_DIR"] = custom_scitex_dir
+    _save = os.environ.get("SCITEX_DIR")
+    os.environ["SCITEX_DIR"] = custom_scitex_dir
     try:
         from scitex_decorators import cache_disk
 
@@ -659,14 +660,16 @@ def cache_directory_creation_runner():
         yield {"result": result}
     finally:
         if _save is None:
-            os.environ.pop("SciTeX_DIR", None)
+            os.environ.pop("SCITEX_DIR", None)
         else:
-            os.environ["SciTeX_DIR"] = _save
+            os.environ["SCITEX_DIR"] = _save
         if os.path.exists(tmp):
             shutil.rmtree(tmp)
 
 
-def test_cache_disk_with_custom_dir_returns_correct_value(cache_directory_creation_runner):
+def test_cache_disk_with_custom_dir_returns_correct_value(
+    cache_directory_creation_runner,
+):
     # Arrange
     info = cache_directory_creation_runner
     # Act
@@ -745,7 +748,9 @@ def test_cache_disk_multi_func_second_uses_cache(multiple_functions_disk_runner)
     assert c2 == 1
 
 
-def test_cache_disk_multi_func_first_cached_value_correct(multiple_functions_disk_runner):
+def test_cache_disk_multi_func_first_cached_value_correct(
+    multiple_functions_disk_runner,
+):
     # Arrange
     info = multiple_functions_disk_runner
     # Act
@@ -754,7 +759,9 @@ def test_cache_disk_multi_func_first_cached_value_correct(multiple_functions_dis
     assert r1c == 10
 
 
-def test_cache_disk_multi_func_second_cached_value_correct(multiple_functions_disk_runner):
+def test_cache_disk_multi_func_second_cached_value_correct(
+    multiple_functions_disk_runner,
+):
     # Arrange
     info = multiple_functions_disk_runner
     # Act

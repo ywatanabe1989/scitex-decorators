@@ -123,12 +123,15 @@ dec.is_torch(x) ; dec.is_cuda(x)
 
 `cache_disk` / `cache_disk_async` resolve the cache dir in this order:
 
-1. `scitex.config.get_paths().function_cache` (only if scitex is installed)
+1. `local_state.runtime_path("decorators", "cache")` — resolves to
+   `$SCITEX_DIR/decorators/runtime/cache` (defaults to
+   `~/.scitex/decorators/runtime/cache`).
 2. `${SCITEX_CACHE_DIR}/function_cache`
-3. `${XDG_CACHE_HOME}/scitex-decorators/function_cache`
-4. `~/.cache/scitex-decorators/function_cache`
+3. `$SCITEX_DIR/decorators/runtime/cache` (defaults to
+   `~/.scitex/decorators/runtime/cache`)
 
-So the package works without the umbrella scitex installed.
+So the cache lives under the package's own runtime directory, and the
+package works without the umbrella scitex installed.
 
 ## Demo
 

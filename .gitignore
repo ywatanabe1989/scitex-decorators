@@ -18,3 +18,8 @@ docs/sphinx/_build/
 docs/sphinx/api/
 *.swp
 .DS_Store
+
+# SciTeX local state — runtime/ is gitignored; seed files are committed
+.scitex/*/runtime/*
+!.scitex/*/runtime/.gitkeep
+!.scitex/*/runtime/README.md
