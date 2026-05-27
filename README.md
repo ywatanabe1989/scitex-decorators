@@ -33,7 +33,7 @@
 | # | Problem | Solution |
 |---|---------|----------|
 | 1 | **Array-type plumbing** — functions that should accept numpy / torch / pandas / xarray end up reimplementing isinstance dispatch + back-conversion every time. | **`@numpy_fn`, `@torch_fn`, `@pandas_fn`, `@xarray_fn`, `@signal_fn`** convert inputs to the named type, run the wrapped function, and restore the caller's original type on the way out. |
-| 2 | **Expensive recomputations** dominate dev cycles; ad-hoc `pickle` caches drift in invalidation and disk layout. | **`@cache_disk` (joblib) / `@cache_disk_async` / `@cache_mem`** give SciTeX-aware disk + memory caching with a documented cache-dir resolution order (`scitex.config` → `$SCITEX_CACHE_DIR` → XDG → `~/.cache`). |
+| 2 | **Expensive recomputations** dominate dev cycles; ad-hoc `pickle` caches drift in invalidation and disk layout. | **`@cache_disk` (joblib) / `@cache_disk_async` / `@cache_mem`** give SciTeX-aware disk + memory caching with a documented cache-dir resolution order (`local_state.runtime_path` → `$SCITEX_CACHE_DIR` → `$SCITEX_DIR/decorators/runtime/cache`). |
 | 3 | **GPU / memory limits** force researchers to hand-batch tensors, often re-deriving the loop per project. | **`@batch_fn` + `@batch_numpy_fn` / `@batch_torch_fn` / `@batch_pandas_fn`** chunk inputs through the wrapped function and reassemble outputs; compose cleanly with the `@*_fn` converters. |
 
 ## Installation
@@ -123,12 +123,15 @@ dec.is_torch(x) ; dec.is_cuda(x)
 
 `cache_disk` / `cache_disk_async` resolve the cache dir in this order:
 
-1. `scitex.config.get_paths().function_cache` (only if scitex is installed)
+1. `local_state.runtime_path("decorators", "cache")` — resolves to
+   `$SCITEX_DIR/decorators/runtime/cache` (defaults to
+   `~/.scitex/decorators/runtime/cache`).
 2. `${SCITEX_CACHE_DIR}/function_cache`
-3. `${XDG_CACHE_HOME}/scitex-decorators/function_cache`
-4. `~/.cache/scitex-decorators/function_cache`
+3. `$SCITEX_DIR/decorators/runtime/cache` (defaults to
+   `~/.scitex/decorators/runtime/cache`)
 
-So the package works without the umbrella scitex installed.
+So the cache lives under the package's own runtime directory, and the
+package works without the umbrella scitex installed.
 
 ## Demo
 
