@@ -231,19 +231,8 @@ the <code class="docutils literal notranslate"><span class="pre">scitex.io</span
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scitex_decorators.deprecated">
-<span class="sig-prename descclassname"><span class="pre">scitex_decorators.</span></span><span class="sig-name descname"><span class="pre">deprecated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scitex_decorators/_deprecated.html#deprecated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_decorators.deprecated" title="Link to this definition"></a></dt>
-<dd><p>A decorator to mark functions as deprecated. It will result in a warning being emitted
-when the function is used.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>reason</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – A human-readable string explaining why this function was deprecated.</p></li>
-<li><p><strong>forward_to</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Optional module path to forward calls to (e.g., “..session.start”).
-If provided, calls will be forwarded to the new function instead of
-executing the original deprecated function.</p></li>
-</ul>
-</dd>
-</dl>
+<span class="sig-prename descclassname"><span class="pre">scitex_decorators.</span></span><span class="sig-name descname"><span class="pre">deprecated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removal_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2.0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scitex_compat/_compat.html#deprecated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scitex_decorators.deprecated" title="Link to this definition"></a></dt>
+<dd><p>Decorator to mark functions as deprecated.</p>
 </dd></dl>
 
 <dl class="py function">
