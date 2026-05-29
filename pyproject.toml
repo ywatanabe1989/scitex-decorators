@@ -23,6 +23,10 @@ dependencies = [
     "scitex-config>=0.3.0",
     # try_import_optional helper for gating heavy extras (torch/pandas/xarray).
     "scitex-dev>=0.11.7",
+    # Canonical @deprecated lives in scitex-compat (zero-runtime-dep). The
+    # scitex_decorators.deprecated symbol re-exports from there; see SOC.md
+    # SSOT section.
+    "scitex-compat>=0.1.0",
 ]
 
 [project.optional-dependencies]
