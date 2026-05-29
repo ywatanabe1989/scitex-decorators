@@ -69,6 +69,14 @@ wrapped function, then converts back to the caller's original type. The
 diagram above shows how `_combined.py`, `_auto_order.py`, and the
 caching/timeout decorators compose around the converter family.
 
+> **`@deprecated` lives upstream.** `scitex_decorators.deprecated` is a
+> thin re-export of [`scitex_compat.deprecated`](https://github.com/ywatanabe1989/scitex-compat).
+> The implementation moved there because scitex-compat is dependency-free
+> stdlib, so Layer 0 leaves can use `@deprecated` without pulling numpy.
+> The public surface here is unchanged — `from scitex_decorators import
+> deprecated` keeps working. See [ADR-0001](docs/adr/0001-thin-reexport-of-deprecated.md)
+> for the contract and the SSOT rationale.
+
 ## Quick Start
 
 ```python
