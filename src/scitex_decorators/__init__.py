@@ -55,6 +55,7 @@ from ._converters import (
 from ._deprecated import deprecated
 from ._not_implemented import not_implemented
 from ._numpy_fn import numpy_fn
+from ._partial_at import partial_at
 from ._preserve_doc import preserve_doc
 from ._signal_fn import signal_fn
 from ._timeout import timeout
@@ -113,6 +114,7 @@ __all__ = [
     "pandas_batch_fn",
     "pandas_fn",
     "pandas_fn",
+    "partial_at",
     "preserve_doc",
     "signal_fn",
     "timeout",
