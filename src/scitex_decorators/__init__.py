@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover — only on ancient Pythons
     __version__ = "0.0.0+local"
 from scitex_dev import try_import_optional
 
+from ._alternate_kwarg import alternate_kwarg
 from ._auto_order import (
     AutoOrderDecorator,
     batch_fn,
@@ -34,6 +35,7 @@ from ._batch_fn import batch_fn
 from ._cache._cache_disk import cache_disk
 from ._cache._cache_disk_async import cache_disk_async
 from ._cache._cache_mem import cache_mem
+from ._cache_simple import cache
 from ._combined import (
     batch_numpy_fn,
     batch_pandas_fn,
@@ -88,11 +90,13 @@ __all__ = [
     "__version__",
     "AutoOrderDecorator",
     "ConversionWarning",
+    "alternate_kwarg",
     "batch_fn",
     "batch_fn",
     "batch_numpy_fn",
     "batch_pandas_fn",
     "batch_torch_fn",
+    "cache",
     "cache_disk",
     "cache_disk_async",
     "cache_mem",
