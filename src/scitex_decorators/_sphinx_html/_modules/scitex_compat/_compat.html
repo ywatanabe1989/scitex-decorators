@@ -84,29 +84,150 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 
 
 <div class="viewcode-block" id="deprecated">
 <a class="viewcode-back" href="../../api.html#scitex_decorators.deprecated">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">deprecated</span><span class="p">(</span><span class="n">new_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">removal_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;2.0&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to mark functions as deprecated.&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">deprecated</span><span class="p">(</span><span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">forward_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mark a function as deprecated, optionally forwarding calls to its replacement.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-        <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is deprecated. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Use </span><span class="si">{</span><span class="n">new_name</span><span class="si">}</span><span class="s2"> instead. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;Will be removed in v</span><span class="si">{</span><span class="n">removal_version</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
-                <span class="ne">DeprecationWarning</span><span class="p">,</span>
-                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="sd">    Canonical SSOT for the ecosystem (see SOC.md). Pure stdlib — safe for any</span>
+<span class="sd">    Layer 0 leaf to import without dragging numpy / scitex-decorators.</span>
 
-        <span class="k">return</span> <span class="n">wrapper</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reason : str, optional</span>
+<span class="sd">        Human-readable explanation of why the function was deprecated.</span>
+<span class="sd">    forward_to : str, optional</span>
+<span class="sd">        Dotted module path to the replacement, e.g. ``&quot;..session.start&quot;`` or</span>
+<span class="sd">        ``&quot;scitex.session.start&quot;``. When provided, calls are forwarded to the</span>
+<span class="sd">        new function (via ``importlib``) and the wrapper&#39;s docstring is</span>
+<span class="sd">        auto-generated by combining a deprecation notice with the target&#39;s</span>
+<span class="sd">        docstring. Relative paths starting with ``..`` are resolved against</span>
+<span class="sd">        the decorated function&#39;s ``__module__``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">forward_to</span><span class="p">:</span>
+            <span class="c1"># Forwarding wrapper: emit warning then call the new target.</span>
+            <span class="c1"># Capture into a non-Optional local so closures see a str.</span>
+            <span class="n">_forward_to</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">forward_to</span>
+
+            <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_forwarding_wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is deprecated: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">module_path</span><span class="p">,</span> <span class="n">function_name</span> <span class="o">=</span> <span class="n">_forward_to</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">module_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">):</span>
+                    <span class="n">func_module</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__module__</span>
+                    <span class="k">if</span> <span class="n">func_module</span><span class="p">:</span>
+                        <span class="n">package_parts</span> <span class="o">=</span> <span class="n">func_module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                        <span class="n">level_count</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">module_path</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span>
+                                <span class="n">level_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">break</span>
+                        <span class="k">if</span> <span class="n">level_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">base_package_parts</span> <span class="o">=</span> <span class="n">package_parts</span><span class="p">[:</span><span class="o">-</span><span class="n">level_count</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="n">base_package_parts</span><span class="p">:</span>
+                                <span class="n">base_package</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_package_parts</span><span class="p">)</span>
+                                <span class="n">relative_part</span> <span class="o">=</span> <span class="n">module_path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                                <span class="n">module_path</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">base_package</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">relative_part</span>
+                                    <span class="k">if</span> <span class="n">relative_part</span>
+                                    <span class="k">else</span> <span class="n">base_package</span>
+                                <span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">module_path</span> <span class="o">=</span> <span class="n">module_path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">target_module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_path</span><span class="p">)</span>
+                    <span class="n">target_function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">target_module</span><span class="p">,</span> <span class="n">function_name</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">target_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to forward </span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">forward_to</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Using original deprecated implementation.&quot;</span><span class="p">,</span>
+                        <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="n">original_name</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">new_location</span> <span class="o">=</span> <span class="n">forward_to</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;scitex.&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+            <span class="n">target_docstring</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">target_module_path</span><span class="p">,</span> <span class="n">target_function_name</span> <span class="o">=</span> <span class="n">forward_to</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">target_module_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">):</span>
+                    <span class="n">func_module</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__module__</span>
+                    <span class="k">if</span> <span class="n">func_module</span><span class="p">:</span>
+                        <span class="n">package_parts</span> <span class="o">=</span> <span class="n">func_module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                        <span class="n">level_count</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">target_module_path</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span>
+                                <span class="n">level_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">break</span>
+                        <span class="k">if</span> <span class="n">level_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">base_package_parts</span> <span class="o">=</span> <span class="n">package_parts</span><span class="p">[:</span><span class="o">-</span><span class="n">level_count</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="n">base_package_parts</span><span class="p">:</span>
+                                <span class="n">base_package</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_package_parts</span><span class="p">)</span>
+                                <span class="n">relative_part</span> <span class="o">=</span> <span class="n">target_module_path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                                <span class="n">target_module_path</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">base_package</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">relative_part</span>
+                                    <span class="k">if</span> <span class="n">relative_part</span>
+                                    <span class="k">else</span> <span class="n">base_package</span>
+                                <span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">target_module_path</span> <span class="o">=</span> <span class="n">target_module_path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                <span class="n">target_module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">target_module_path</span><span class="p">)</span>
+                <span class="n">target_function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">target_module</span><span class="p">,</span> <span class="n">target_function_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">target_function</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">:</span>
+                    <span class="n">target_docstring</span> <span class="o">=</span> <span class="n">target_function</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+                <span class="k">pass</span>
+
+            <span class="k">if</span> <span class="n">target_docstring</span><span class="p">:</span>
+                <span class="n">forwarding_docstring</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;**DEPRECATED: Use </span><span class="si">{</span><span class="n">new_location</span><span class="si">}</span><span class="s2"> instead**</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">target_docstring</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Deprecation Notice</span><span class="se">\n</span><span class="s2">------------------</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;This function is deprecated and will be removed in a future &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;version. Use `</span><span class="si">{</span><span class="n">new_location</span><span class="si">}</span><span class="s2">` instead. This wrapper forwards &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;all calls to the new function while displaying a deprecation &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;warning.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">forwarding_docstring</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;**DEPRECATED: Use </span><span class="si">{</span><span class="n">new_location</span><span class="si">}</span><span class="s2"> instead**</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Backward-compat shim for </span><span class="si">{</span><span class="n">original_name</span><span class="si">}</span><span class="s2">(). Forwards all &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;calls to </span><span class="si">{</span><span class="n">new_location</span><span class="si">}</span><span class="s2"> while displaying a deprecation &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;warning.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">_forwarding_wrapper</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">forwarding_docstring</span>
+            <span class="k">return</span> <span class="n">_forwarding_wrapper</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># No forwarding: just emit the warning then call original.</span>
+            <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_warning_wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> is deprecated: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">_warning_wrapper</span>
 
     <span class="k">return</span> <span class="n">decorator</span></div>
 
