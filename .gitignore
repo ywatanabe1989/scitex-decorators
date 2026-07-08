@@ -23,3 +23,4 @@ docs/sphinx/api/
 .scitex/*/runtime/*
 !.scitex/*/runtime/.gitkeep
 !.scitex/*/runtime/README.md
+.worktrees/
